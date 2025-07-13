@@ -1,0 +1,30 @@
+[project]
+name = "milkbottle"
+version = "0.1.0"
+description = "The Fluid Code Toolbox – Modular CLI with interactive ASCII menus."
+authors = [{ name = "Your Name", email = "your@email.com" }]
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "MIT" }
+dependencies = [
+    "typer==0.12.3",
+    "rich==13.7.1",
+    "python-slugify==8.0.4",
+    "tqdm==4.66.2",
+    "pymupdf==1.23.7",
+    "pillow==10.3.0",
+    "pyyaml==6.0.1"
+]
+
+[project.scripts]
+milk = "milkbottle.MilkBottle:main"  # Ensure this file exists or update to correct entry point
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4.0", "pytest-mock>=3.11.1", "black>=24.3.0", "isort>=5.12.0"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

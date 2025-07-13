@@ -1,0 +1,27 @@
+# TASKLIST
+
+- [ ] Project scaffolding
+  - [ ] Create `pyproject.toml` with locked dependencies
+  - [ ] Initialize `src/pdfmilker/` package with `__init__.py`
+- [ ] Command-line interface
+  - [ ] Build Typer app in `cli.py`
+  - [ ] Implement interactive menu loop
+- [ ] Core extraction pipeline
+  - [ ] `discovery.py` – find & hash PDFs
+  - [ ] `prepare.py` – create directory tree
+  - [ ] `extract.py` – pull text, images, metadata
+  - [ ] `transform.py` – convert to Markdown
+  - [ ] `validate.py` – asset & hash checks
+  - [ ] `relocate.py` – move source PDF
+  - [ ] `report.py` – JSON + Rich summary
+- [ ] Utilities & error classes
+  - [ ] `utils.py` – common helpers (hashing, slugify)
+  - [ ] `errors.py` – custom exceptions hierarchy
+- [ ] Configuration layer
+  - [ ] Parse `pdfmilker.toml` defaults & CLI overrides
+- [ ] Testing suite
+  - [ ] Unit tests for each SRP module
+  - [ ] End-to-end extraction fixture tests
+- [ ] Documentation
+  - [ ] Update `README.md` & `PDFMILKER.md`
+  - [ ] Keep `TASKLIST.md` in sync

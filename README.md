@@ -1,0 +1,171 @@
+# MilkBottle 🍼 – The Fluid Code Toolbox
+
+A **modular CLI framework** that lets you plug in task‑focused “bottles” (sub‑tools) without touching core code.  
+Write once, bottle forever—whether you’re batch‑extracting PDFs, organising fonts, or shipping your own milker.
+
+---
+
+## Table of Contents
+
+- [MilkBottle 🍼 – The Fluid Code Toolbox](#milkbottle---the-fluid-code-toolbox)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Quick Start](#quickstart)
+  - [CLI Grammar](#cli-grammar)
+  - [Built‑In Bottles](#builtin-bottles)
+  - [Configuration](#configuration)
+  - [Running Tests](#running-tests)
+  - [Adding New Bottles/Plugins](#adding-new-bottlesplugins)
+  - [Contributing](#contributing)
+  - [Roadmap](#roadmap)
+  - [License](#license)
+
+---
+
+## Features
+
+- **Single Verb UX** – everything begins with `milk`.
+- **Bottle Registry** – auto‑discovers installed bottles via entry‑points or `src/milkbottle/modules/`.
+- **Rich CLI** – colourised tables, progress bars, and styled tracebacks.
+- **SRP by Design** – each bottle is fully self‑contained: CLI, pipeline, errors, tests.
+- **Human‑Readable Artifacts** – YAML / JSON side‑cars, Markdown exports.
+
+> **Suggestion:** Add a badges row here (PyPI version, build, coverage) once you publish.
+
+---
+
+## Installation
+
+**Requirements:**
+
+- Python 3.11+
+- [System dependencies for PyMuPDF and Pillow](https://pymupdf.readthedocs.io/en/latest/installation.html#system-requirements) (e.g., libmupdf, libjpeg, zlib, etc.)
+
+```bash
+# Clone & install editable for local dev
+git clone https://github.com/your‑user/milkbottle.git
+cd milkbottle
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"   # pulls Rich, Typer, PyMuPDF, Pillow, PyYAML, etc.
+```
+
+> **Note:** The CLI entry point is set to `src.milkbottle.MilkBottle:main` in `pyproject.toml`. Ensure this file exists or update the entry point accordingly.
+
+> **Suggestion:** Provide a published PyPI install command when ready (`pip install milkbottle`).
+
+---
+
+## Quick Start
+
+```bash
+# List available bottles
+milk bottle --list
+
+# Run the PDF extractor on all PDFs in the cwd
+milk bottle PDFmilker
+
+# Same, but quiet logs and images off
+milk bottle PDFmilker --no-images --log-level quiet
+```
+
+---
+
+## CLI Grammar
+
+```
+milk [GLOBAL_OPTS] bottle <BottleName|Alias> [BOTTLE_OPTS] [PATTERN]
+```
+
+- **Global Opts**  `--log-level` `--config` `--dry` `--version`
+- **Bottle Opts** defined by each bottle (see docs below).
+
+---
+
+## Built‑In Bottles
+
+| Alias          | Status     | Purpose                                        | Key Options                          |
+| -------------- | ---------- | ---------------------------------------------- | ------------------------------------ |
+| **PDFmilker**  | ✅ MVP     | Extract text, images, metadata → bundle output | `--images/--no-images` `--overwrite` |
+| **FONTmilker** | 🚧 Planned | Organise fonts into `<family>/<style>` tree    | `--move/--copy` `--formats`          |
+
+> **Suggestion:** Once FONTmilker lands, link its doc page here.
+
+---
+
+## Configuration
+
+MilkBottle layers settings from multiple sources (lowest → highest):
+
+1. Package defaults
+2. System‑wide `/etc/milkbottle.toml`
+3. User `~/.config/milkbottle.toml`
+4. Project‑local `milkbottle.toml`
+5. CLI flags
+
+Example **milkbottle.toml**
+
+```toml
+[global]
+outdir = "~/MilkBottleOutput"
+log_level = "info"
+dry = false
+
+[PDFmilker]
+images = true
+overwrite = false
+```
+
+---
+
+## Running Tests
+
+To run all tests (unit, integration, render):
+
+```bash
+pytest
+```
+
+- Ensure you have all dev dependencies installed: `pip install -e ".[dev]"`
+- Test coverage should be 90%+ for all modules and bottles.
+
+---
+
+## Adding New Bottles/Plugins
+
+1. Create a new folder under `src/milkbottle/modules/` (e.g., `mybottle/`).
+2. Implement your CLI in `cli.py` and expose a `get_cli()` function and metadata (`__alias__`, `__description__`, `__version__`).
+3. Add your logic, errors, and tests in the same folder.
+4. Register your bottle via entry-point in `pyproject.toml` or let the registry auto-discover it.
+5. Add documentation and update the main menu if needed.
+
+---
+
+## Contributing
+
+1. Fork, branch, code.
+2. Ensure **Black**, **isort**, and **pytest** pass (`pytest -q`).
+3. Submit a PR with a clear description and link to a TASKLIST item if applicable.
+
+> **Suggestion:** Add a GitHub Action for lint + tests to automate checks.
+
+---
+
+## Roadmap
+
+| Milestone  | Target                                 | Notes                       |
+| ---------- | -------------------------------------- | --------------------------- |
+| **v0.1.0** | Bottle registry + PDFmilker integrated | Complete                    |
+| **v0.2.0** | FONTmilker MVP                         | Adds `fontTools` dep        |
+| **v0.3.x** | Plugin SDK + cookiecutter              | Encourage community bottles |
+| **v1.0.0** | Stable API freeze                      | Semantic versioning         |
+
+---
+
+## License
+
+MIT © 2025
+
+```
+deadcoast.net
+```
