@@ -7,18 +7,18 @@ from typing import Optional
 from rich.console import Console
 from tqdm import tqdm
 
-from src.milkbottle.modules.pdfmilker.discovery import discover_pdfs, hash_pdf
-from src.milkbottle.modules.pdfmilker.extract import (
+from milkbottle.modules.pdfmilker.discovery import discover_pdfs, hash_pdf
+from milkbottle.modules.pdfmilker.extract import (
     extract_images,
     extract_metadata,
     extract_text,
 )
-from src.milkbottle.modules.pdfmilker.prepare import prepare_output_tree
-from src.milkbottle.modules.pdfmilker.relocate import relocate_pdf
-from src.milkbottle.modules.pdfmilker.report import print_report, write_report
-from src.milkbottle.modules.pdfmilker.transform import pdf_to_markdown
-from src.milkbottle.modules.pdfmilker.utils import format_file_size
-from src.milkbottle.modules.pdfmilker.validate import validate_assets, validate_pdf_hash
+from milkbottle.modules.pdfmilker.prepare import prepare_output_tree
+from milkbottle.modules.pdfmilker.relocate import relocate_pdf
+from milkbottle.modules.pdfmilker.report import print_report, write_report
+from milkbottle.modules.pdfmilker.transform import pdf_to_markdown
+from milkbottle.modules.pdfmilker.utils import format_file_size
+from milkbottle.modules.pdfmilker.validate import validate_assets, validate_pdf_hash
 
 logger = logging.getLogger("pdfmilker.pipeline")
 console = Console()

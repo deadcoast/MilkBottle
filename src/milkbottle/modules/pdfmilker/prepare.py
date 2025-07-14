@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from src.milkbottle.utils import slugify
+from milkbottle.utils import slugify
 
 logger = logging.getLogger("pdfmilker.prepare")
 

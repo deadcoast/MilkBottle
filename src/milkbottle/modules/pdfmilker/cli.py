@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 
-from src.milkbottle.modules.pdfmilker.pipeline import run_pdfmilker_pipeline
+from milkbottle.modules.pdfmilker.pipeline import run_pdfmilker_pipeline
 
 app = typer.Typer(help="PDFmilker – Extract text, images, and metadata from PDFs.")
 

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 
-from src.milkbottle.utils import hash_file
+from milkbottle.utils import hash_file
 
 logger = logging.getLogger("pdfmilker.validate")
 
