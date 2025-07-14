@@ -7,8 +7,8 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.prompt import Prompt
 
-from src.milkbottle import registry
-from src.milkbottle.utils import print_menu_border
+from milkbottle import registry
+from milkbottle.utils import print_menu_border
 
 app = typer.Typer(
     help="MilkBottle – The Fluid Code Toolbox. Modular CLI with interactive ASCII menus."
@@ -87,7 +87,7 @@ def show_main_menu() -> None:
                 )
                 Prompt.ask("Press Enter to return to menu")
         elif choice == "2":
-            from src.milkbottle.config import get_config
+            from milkbottle.config import get_config
 
             config = get_config()
             from rich.panel import Panel
