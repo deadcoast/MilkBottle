@@ -1,3 +1,7 @@
+"""
+PDFmilker text extraction module.
+"""
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,13 +20,13 @@ def extract_text(pdf_path: Path) -> Optional[str]:
         Optional[str]: Extracted text, or None if error.
     """
     try:
-        doc = fitz.open(str(pdf_path))
+        doc = fitz.open(str(pdf_path))  # type: ignore[attr-defined]
         text = "\n".join(page.get_text() for page in doc)
         doc.close()
-        logger.info(f"Extracted text from {pdf_path}")
+        logger.info("Extracted text from %s", pdf_path)
         return text
-    except Exception as e:
-        logger.error(f"Failed to extract text from {pdf_path}: {e}")
+    except (OSError, ValueError, RuntimeError) as e:
+        logger.error("Failed to extract text from %s: %s", pdf_path, e)
         return None
 
 
@@ -37,26 +41,22 @@ def extract_images(pdf_path: Path, output_dir: Path) -> List[Path]:
     """
     saved_images = []
     try:
-        doc = fitz.open(str(pdf_path))
+        doc = fitz.open(str(pdf_path))  # type: ignore[attr-defined]
         for page_num, page in enumerate(doc, 1):
             images = page.get_images(full=True)
             for img_index, img in enumerate(images):
                 xref = img[0]
                 pix = fitz.Pixmap(doc, xref)
-                if pix.n < 5:  # this is GRAY or RGB
-                    img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
-                    pix.save(str(img_path))
-                    saved_images.append(img_path)
-                else:  # CMYK: convert to RGB first
+                if pix.n >= 5:
                     pix = fitz.Pixmap(fitz.csRGB, pix)
-                    img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
-                    pix.save(str(img_path))
-                    saved_images.append(img_path)
+                img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
+                pix.save(str(img_path))
+                saved_images.append(img_path)
                 pix = None
         doc.close()
-        logger.info(f"Extracted {len(saved_images)} images from {pdf_path}")
-    except Exception as e:
-        logger.error(f"Failed to extract images from {pdf_path}: {e}")
+        logger.info("Extracted %d images from %s", len(saved_images), pdf_path)
+    except (OSError, ValueError, RuntimeError) as e:
+        logger.error("Failed to extract images from %s: %s", pdf_path, e)
     return saved_images
 
 
@@ -70,10 +70,10 @@ def extract_metadata(pdf_path: Path) -> Dict[str, Any]:
     """
     metadata = {}
     try:
-        doc = fitz.open(str(pdf_path))
+        doc = fitz.open(str(pdf_path))  # type: ignore[attr-defined]
         metadata = dict(doc.metadata)
         doc.close()
-        logger.info(f"Extracted metadata from {pdf_path}")
-    except Exception as e:
-        logger.error(f"Failed to extract metadata from {pdf_path}: {e}")
+        logger.info("Extracted metadata from %s", pdf_path)
+    except (OSError, ValueError, RuntimeError) as e:
+        logger.error("Failed to extract metadata from %s: %s", pdf_path, e)
     return metadata

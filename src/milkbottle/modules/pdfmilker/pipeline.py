@@ -1,6 +1,10 @@
+"""PDFmilker pipeline module."""
+
+from __future__ import annotations
+
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -35,7 +39,7 @@ def log_jsonl(meta_dir: Path, event: str, message: str, **data) -> None:
     """
     log_path = meta_dir / "pipeline.log"
     entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "event": event,
         "message": message,
         **data,
@@ -44,7 +48,7 @@ def log_jsonl(meta_dir: Path, event: str, message: str, **data) -> None:
         with log_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception as e:
-        logger.error(f"Failed to write JSONL log: {e}")
+        logger.error("Failed to write JSONL log: %s", e)
 
 
 def run_pdfmilker_pipeline(
@@ -161,7 +165,7 @@ def run_pdfmilker_pipeline(
                         hash_valid=hash_valid,
                     )
                     if not hash_valid:
-                        logger.error(f"Hash mismatch after relocation for {pdf_path}")
+                        logger.error("Hash mismatch after relocation for %s", pdf_path)
                         log_jsonl(
                             subdirs["meta"],
                             "error",
@@ -193,7 +197,7 @@ def run_pdfmilker_pipeline(
                 pdf=str(pdf_path),
             )
         except Exception as e:
-            logger.error(f"Pipeline failed for {pdf_path}: {e}")
+            logger.error("Pipeline failed for %s: %s", pdf_path, e)
             console.print(f"[red]Pipeline failed for {pdf_path}: {e}[/red]")
             # Log error to JSONL
             try:

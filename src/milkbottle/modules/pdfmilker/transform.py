@@ -1,3 +1,7 @@
+"""PDFmilker transform module."""
+
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, Optional
 
@@ -19,11 +23,9 @@ def pdf_to_markdown(text: str, metadata: Optional[Dict[str, Any]] = None) -> str
     if metadata:
         try:
             yaml_front = yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True)
-            md_lines.append("---")
-            md_lines.append(yaml_front.strip())
-            md_lines.append("---\n")
+            md_lines.extend(("---", yaml_front.strip(), "---\n"))
         except Exception as e:
-            logger.error(f"Failed to generate YAML front-matter: {e}")
+            logger.error("Failed to generate YAML front-matter: %s", e)
     # Simple heading hierarchy: treat lines starting with numbers or ALL CAPS as headings
     for line in text.splitlines():
         if line.strip().isupper() and len(line.strip()) > 3:

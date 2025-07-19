@@ -1,3 +1,7 @@
+"""PDFmilker discovery module."""
+
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import List, Optional
@@ -19,7 +23,7 @@ def discover_pdfs(directory: Optional[str] = None) -> List[Path]:
         directory = str(Path.cwd())
     root = Path(directory)
     pdfs = [p for p in root.rglob("*.pdf") if p.is_file()]
-    logger.info(f"Discovered {len(pdfs)} PDF(s) in {directory}")
+    logger.info("Discovered %d PDF(s) in %s", len(pdfs), directory)
     return pdfs
 
 

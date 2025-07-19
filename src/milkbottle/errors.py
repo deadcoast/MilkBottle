@@ -1,17 +1,16 @@
+"""MilkBottle exception hierarchy."""
+
+
 class MilkBottleError(Exception):
     """
     Base exception for all MilkBottle errors.
     """
-
-    pass
 
 
 class UserAbort(MilkBottleError):
     """
     Raised when the user aborts an operation intentionally.
     """
-
-    pass
 
 
 class BottleNotFound(MilkBottleError):

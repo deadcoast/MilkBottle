@@ -1,3 +1,7 @@
+"""PDFmilker CLI module."""
+
+from __future__ import annotations
+
 import os
 import tomllib
 from pathlib import Path
@@ -48,9 +52,7 @@ def load_pdfmilker_config() -> Dict[str, Any]:
                 try:
                     with fpath.open("rb") as f:
                         toml_data = tomllib.load(f)
-                        config.update(
-                            {k: v for k, v in toml_data.get("pdfmilker", {}).items()}
-                        )
+                        config.update(dict(toml_data.get("pdfmilker", {}).items()))
                 except Exception:
                     pass
     # 2. Load env vars

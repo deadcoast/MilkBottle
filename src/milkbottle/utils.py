@@ -1,3 +1,7 @@
+"""MilkBottle utils module."""
+
+from __future__ import annotations
+
 import hashlib
 import logging
 from typing import Optional
@@ -29,7 +33,7 @@ def slugify(value: str) -> str:
     try:
         return _slugify(value)
     except Exception as e:
-        logger.error(f"Failed to slugify '{value}': {e}")
+        logger.error("Failed to slugify '%s': %s", value, e)
         return value
 
 
@@ -49,7 +53,7 @@ def hash_file(path: str, chunk_size: int = 65536) -> Optional[str]:
                 sha256.update(chunk)
         return sha256.hexdigest()
     except Exception as e:
-        logger.error(f"Failed to hash file '{path}': {e}")
+        logger.error("Failed to hash file '%s': %s", path, e)
         return None
 
 
@@ -72,7 +76,7 @@ def render_menu_border(
     """
     border_text = Text(title, style=style, justify="center")
     subtitle_text = Text(subtitle, style="dim", justify="center")
-    panel = Panel(
+    return Panel(
         subtitle_text,
         title=border_text,
         width=width,
@@ -80,7 +84,6 @@ def render_menu_border(
         box=MINIMAL_DOUBLE_HEAD,
         padding=(1, 2),
     )
-    return panel
 
 
 def print_menu_border() -> None:

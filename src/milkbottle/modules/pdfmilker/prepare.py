@@ -1,3 +1,7 @@
+"""PDFmilker prepare module."""
+
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Dict
@@ -28,8 +32,8 @@ def prepare_output_tree(pdf_path: Path, outdir: Path) -> Dict[str, Path]:
     try:
         for path in subdirs.values():
             path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created output tree at {base}")
+        logger.info("Created output tree at %s", base)
     except Exception as e:
-        logger.error(f"Failed to create output tree for {pdf_path}: {e}")
+        logger.error("Failed to create output tree for %s: %s", pdf_path, e)
         raise
     return subdirs

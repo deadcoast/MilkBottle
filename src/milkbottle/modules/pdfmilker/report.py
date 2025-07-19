@@ -1,3 +1,7 @@
+"""PDFmilker report module."""
+
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -25,9 +29,9 @@ def write_report(
     try:
         with report_path.open("w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2, ensure_ascii=False)
-        logger.info(f"Wrote report to {report_path}")
+        logger.info("Wrote report to %s", report_path)
     except Exception as e:
-        logger.error(f"Failed to write report to {report_path}: {e}")
+        logger.error("Failed to write report to %s: %s", report_path, e)
     return report_path
 
 

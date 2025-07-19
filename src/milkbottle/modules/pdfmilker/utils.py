@@ -1,3 +1,7 @@
+"""PDFmilker utils module."""
+
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -35,5 +39,5 @@ def is_pdf_file(path: Path) -> bool:
             header = f.read(5)
             return header == b"%PDF-"
     except Exception as e:
-        logger.error(f"Failed to check PDF magic number for {path}: {e}")
+        logger.error("Failed to check PDF magic number for %s: %s", path, e)
         return False

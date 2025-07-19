@@ -1,3 +1,7 @@
+"""MilkBottle registry module."""
+
+from __future__ import annotations
+
 import importlib
 import importlib.metadata
 import logging
@@ -39,10 +43,10 @@ def discover_entrypoint_bottles() -> List[Dict[str, Any]]:
                 )
             except Exception as e:
                 logger.error(
-                    f"Failed to load entry-point bottle '{entry_point.name}': {e}"
+                    "Failed to load entry-point bottle '%s': %s", entry_point.name, e
                 )
     except Exception as e:
-        logger.error(f"Error discovering entry-point bottles: {e}")
+        logger.error("Error discovering entry-point bottles: %s", e)
     return bottles
 
 
@@ -73,7 +77,7 @@ def discover_local_bottles() -> List[Dict[str, Any]]:
                     }
                 )
             except Exception as e:
-                logger.error(f"Failed to load local bottle '{item.name}': {e}")
+                logger.error("Failed to load local bottle '%s': %s", item.name, e)
     return bottles
 
 
@@ -107,7 +111,7 @@ def get_bottle(alias: str) -> Optional[typer.Typer]:
             try:
                 return b["loader"]()
             except Exception as e:
-                logger.error(f"Failed to load CLI for bottle '{alias}': {e}")
+                logger.error("Failed to load CLI for bottle '%s': %s", alias, e)
                 return None
-    logger.warning(f"Bottle '{alias}' not found.")
+    logger.warning("Bottle '%s' not found.", alias)
     return None

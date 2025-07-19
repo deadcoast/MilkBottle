@@ -1,3 +1,7 @@
+"""PDFmilker validate module."""
+
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Dict, List
@@ -18,7 +22,7 @@ def validate_assets(asset_paths: Dict[str, List[Path]]) -> Dict[str, bool]:
     results = {}
     for asset_type, paths in asset_paths.items():
         results[asset_type] = all(p.exists() for p in paths)
-        logger.info(f"Validation for {asset_type}: {results[asset_type]}")
+        logger.info("Validation for %s: %s", asset_type, results[asset_type])
     return results
 
 
@@ -33,5 +37,5 @@ def validate_pdf_hash(pdf_path: Path, expected_hash: str) -> bool:
     """
     actual_hash = hash_file(str(pdf_path))
     match = actual_hash == expected_hash
-    logger.info(f"Hash validation for {pdf_path}: {match}")
+    logger.info("Hash validation for %s: %s", pdf_path, match)
     return match
