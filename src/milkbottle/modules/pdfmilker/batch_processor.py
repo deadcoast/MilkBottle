@@ -26,6 +26,8 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+from .structured_logger import create_structured_logger
+
 logger = logging.getLogger(__name__)
 console = Console()
 
@@ -93,6 +95,15 @@ class BatchProcessor:
         self.progress_callback = progress_callback
         self.cancellation_event.clear()
 
+        # Create structured logger for batch operations
+        batch_slug = f"batch_{int(time.time())}"
+        meta_dir = output_dir / "meta"
+        structured_logger = create_structured_logger(meta_dir, batch_slug)
+
+        structured_logger.log_pipeline_step(
+            "batch", "started", total_files=len(pdf_files), output_dir=str(output_dir)
+        )
+
         # Ensure output directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -100,6 +111,14 @@ class BatchProcessor:
         files_to_process = self._filter_files(pdf_files, output_dir)
 
         if not files_to_process:
+            structured_logger.log_pipeline_step(
+                "batch",
+                "completed",
+                total_files=len(pdf_files),
+                successful_files=0,
+                failed_files=0,
+                skipped_files=len(pdf_files),
+            )
             return BatchResult(
                 total_files=len(pdf_files),
                 successful_files=0,
@@ -136,15 +155,15 @@ class BatchProcessor:
         processing_time = time.time() - start_time
 
         # Compile results
+        successful_files = len([r for r in results.values() if r.get("success", False)])
+        failed_files = len([r for r in results.values() if not r.get("success", False)])
+        skipped_files = len(pdf_files) - len(files_to_process)
+
         batch_result = BatchResult(
             total_files=len(pdf_files),
-            successful_files=len(
-                [r for r in results.values() if r.get("success", False)]
-            ),
-            failed_files=len(
-                [r for r in results.values() if not r.get("success", False)]
-            ),
-            skipped_files=len(pdf_files) - len(files_to_process),
+            successful_files=successful_files,
+            failed_files=failed_files,
+            skipped_files=skipped_files,
             processing_time=processing_time,
             results={str(k): v for k, v in results.items()},
         )
@@ -157,6 +176,25 @@ class BatchProcessor:
                 )
             if result.get("warning"):
                 batch_result.warnings[str(file_path)] = result["warning"]
+
+        # Log batch summary
+        structured_logger.log_batch_summary(
+            total_files=len(pdf_files),
+            successful=successful_files,
+            failed=failed_files,
+            skipped=skipped_files,
+            processing_time=processing_time,
+        )
+
+        structured_logger.log_pipeline_step(
+            "batch",
+            "completed",
+            total_files=len(pdf_files),
+            successful_files=successful_files,
+            failed_files=failed_files,
+            skipped_files=skipped_files,
+            processing_time=processing_time,
+        )
 
         return batch_result
 

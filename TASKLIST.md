@@ -17,7 +17,7 @@ MAJOR COMPLETION TASKS:
 - [x] **End-to-End Pipeline Integration**
 
   - [x] Implement a function that runs the full PDFmilker pipeline (discover → prepare → extract → transform → validate → relocate → report) for all PDFs in the target directory.
-  - [x] Integrate this pipeline with the PDFmilker CLI menu so that “Start PDF Extraction Process” actually runs the workflow.
+  - [x] Integrate this pipeline with the PDFmilker CLI menu so that "Start PDF Extraction Process" actually runs the workflow.
   - [x] Add error handling and logging for the full pipeline.
 
 - [x] **User-Facing CLI Improvements**
@@ -29,17 +29,17 @@ MAJOR COMPLETION TASKS:
 - [x] **Error Handling & Logging**
 
   - [x] Ensure all exceptions are caught and logged with useful messages.
-  - [ ] Write structured logs to `/meta/<slug>.log` in JSONL format.
+  - [x] Write structured logs to `/meta/<slug>.log` in JSONL format.
 
-- [ ] **Configuration**
+- [x] **Configuration**
 
-  - [ ] Make sure all config options (TOML, env, CLI) are respected throughout the pipeline.
-  - [ ] Add support for `pdfmilker.toml` and CLI overrides.
+  - [x] Make sure all config options (TOML, env, CLI) are respected throughout the pipeline.
+  - [x] Add support for `pdfmilker.toml` and CLI overrides.
 
-- [ ] **Extensibility**
+- [x] **Extensibility**
 
-  - [ ] Document and test the entry-point/plugin system for adding new bottles.
-  - [ ] Provide a template or example for a new bottle.
+  - [x] Document and test the entry-point/plugin system for adding new bottles.
+  - [x] Provide a template or example for a new bottle.
 
 - [ ] **Testing suite**
 

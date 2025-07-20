@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from milkbottle.utils import slugify
+
+from .config import pdfmilker_config
 
 # Removed circular import - BatchProcessor will be instantiated when needed
 from .errors import PDFMilkerError
@@ -14,6 +19,7 @@ from .image_processor import image_processor
 from .mathpix_processor import mathpix_processor
 from .pandoc_converter import pandoc_converter
 from .quality_assessor import quality_assessor
+from .structured_logger import create_structured_logger
 from .table_processor import table_processor
 
 logger = logging.getLogger("pdfmilker.pipeline")
@@ -37,9 +43,10 @@ class PDFmilkerPipeline:
     def batch_processor(self):
         """Get batch processor instance, creating it if needed."""
         if self._batch_processor is None:
-            from .batch_processor import BatchProcessor
+            from .batch_processor import BatchProcessor, ProcessingConfig
 
-            self._batch_processor = BatchProcessor()
+            config = ProcessingConfig()
+            self._batch_processor = BatchProcessor(config)
         return self._batch_processor
 
     def process_pdf(
@@ -56,7 +63,17 @@ class PDFmilkerPipeline:
         Returns:
             Dict containing processing results and metadata
         """
+        start_time = time.time()
+
+        # Create structured logger for this PDF
+        slug = slugify(pdf_path.stem)
+        meta_dir = output_dir / "meta"
+        structured_logger = create_structured_logger(meta_dir, slug)
+
         try:
+            structured_logger.log_pipeline_step(
+                "extract", "started", pdf_path=str(pdf_path)
+            )
             logger.info("Processing PDF: %s", pdf_path)
 
             # Create output directory if it doesn't exist
@@ -75,6 +92,7 @@ class PDFmilkerPipeline:
                         "pdf_path": str(pdf_path),
                         "extraction_method": result.get("method", "unknown"),
                         "content_length": result.get("content_length", 0),
+                        "processing_time": time.time() - start_time,
                     }
                 )
 
@@ -88,6 +106,15 @@ class PDFmilkerPipeline:
                 if result["output_path"].exists():
                     result["output_path"].unlink()
 
+                # Log successful extraction
+                structured_logger.log_pipeline_step(
+                    "extract",
+                    "completed",
+                    extraction_method=result.get("method", "unknown"),
+                    content_length=result.get("content_length", 0),
+                )
+                structured_logger.log_extraction_result(extracted_content)
+
                 return {
                     "success": True,
                     "output_file": output_file,
@@ -95,9 +122,21 @@ class PDFmilkerPipeline:
                     "export_result": export_result,
                 }
             else:
+                structured_logger.log_pipeline_step(
+                    "extract", "failed", error="PDF processing failed"
+                )
                 raise PDFMilkerError("PDF processing failed")
 
         except Exception as e:
+            structured_logger.log_error_with_context(
+                e,
+                {
+                    "pdf_path": str(pdf_path),
+                    "output_dir": str(output_dir),
+                    "format_type": format_type,
+                    "processing_time": time.time() - start_time,
+                },
+            )
             logger.error("PDF processing failed: %s", e)
             raise PDFMilkerError(f"Failed to process PDF: {e}") from e
 
@@ -115,7 +154,15 @@ class PDFmilkerPipeline:
         Returns:
             Dict containing processing results and metadata
         """
+        start_time = time.time()
+        slug = slugify(pdf_path.stem)
+        meta_dir = output_dir / "meta"
+        structured_logger = create_structured_logger(meta_dir, slug)
+
         try:
+            structured_logger.log_pipeline_step(
+                "fallback", "started", pdf_path=str(pdf_path)
+            )
             logger.info("Using fallback processing for: %s", pdf_path)
 
             # Use basic extraction as fallback
@@ -130,6 +177,7 @@ class PDFmilkerPipeline:
                         "pdf_path": str(pdf_path),
                         "extraction_method": "fallback",
                         "content_length": result.get("content_length", 0),
+                        "processing_time": time.time() - start_time,
                     }
                 )
 
@@ -143,6 +191,15 @@ class PDFmilkerPipeline:
                 if result["output_path"].exists():
                     result["output_path"].unlink()
 
+                # Log successful fallback
+                structured_logger.log_pipeline_step(
+                    "fallback",
+                    "completed",
+                    extraction_method="fallback",
+                    content_length=result.get("content_length", 0),
+                )
+                structured_logger.log_extraction_result(extracted_content)
+
                 return {
                     "success": True,
                     "output_file": output_file,
@@ -150,9 +207,21 @@ class PDFmilkerPipeline:
                     "export_result": export_result,
                 }
             else:
+                structured_logger.log_pipeline_step(
+                    "fallback", "failed", error="Fallback processing failed"
+                )
                 raise PDFMilkerError("Fallback processing failed")
 
         except Exception as e:
+            structured_logger.log_error_with_context(
+                e,
+                {
+                    "pdf_path": str(pdf_path),
+                    "output_dir": str(output_dir),
+                    "format_type": format_type,
+                    "processing_time": time.time() - start_time,
+                },
+            )
             logger.error("Fallback processing failed: %s", e)
             raise PDFMilkerError(f"Fallback processing failed: {e}") from e
 
@@ -228,36 +297,92 @@ class PDFmilkerPipeline:
         self, pdf_path: Path, output_path: Path
     ) -> Dict[str, Any]:
         """
-        Process scientific paper using proper libraries.
+        Process a scientific paper using multiple extraction methods.
+
         Args:
-            pdf_path (Path): Path to input PDF.
-            output_path (Path): Path for output Markdown.
+            pdf_path: Path to the PDF file
+            output_path: Path for the output markdown file
+
         Returns:
             Dict[str, Any]: Processing results and metadata.
         """
+        start_time = time.time()
+        slug = slugify(pdf_path.stem)
+        meta_dir = output_path.parent / "meta"
+        structured_logger = create_structured_logger(meta_dir, slug)
+
         try:
+            structured_logger.log_pipeline_step(
+                "grobid", "started", pdf_path=str(pdf_path)
+            )
             logger.info("Processing scientific paper: %s", pdf_path)
 
-            # Step 1: Extract using Grobid (best for scientific papers)
-            grobid_result = self.grobid_extractor.extract_scientific_paper(pdf_path)
+            # Step 1: Extract using Grobid (best for scientific papers) - if enabled
+            if pdfmilker_config.is_grobid_enabled():
+                grobid_result = self.grobid_extractor.extract_scientific_paper(pdf_path)
 
-            if grobid_result and grobid_result.get("body_text"):
-                logger.info("Using Grobid extraction results")
-                return self._process_grobid_result(grobid_result, output_path)
+                if grobid_result and grobid_result.get("body_text"):
+                    logger.info("Using Grobid extraction results")
+                    result = self._process_grobid_result(grobid_result, output_path)
+                    structured_logger.log_pipeline_step(
+                        "grobid",
+                        "completed",
+                        extraction_method="grobid",
+                        content_length=result.get("content_length", 0),
+                    )
+                    structured_logger.log_extraction_result(result)
+                    return result
+            else:
+                logger.info("Grobid is disabled in configuration")
 
-            # Step 2: Fallback to Pandoc for basic conversion
-            logger.info("Grobid extraction failed, trying Pandoc")
-            pandoc_result = self.pandoc_converter.convert_pdf_to_markdown(pdf_path)
+            # Step 2: Fallback to Pandoc for basic conversion - if enabled
+            if pdfmilker_config.is_pandoc_enabled():
+                structured_logger.log_pipeline_step(
+                    "pandoc", "started", pdf_path=str(pdf_path)
+                )
+                logger.info("Grobid extraction failed or disabled, trying Pandoc")
+                pandoc_result = self.pandoc_converter.convert_pdf_to_markdown(pdf_path)
 
-            if pandoc_result:
-                logger.info("Using Pandoc conversion results")
-                return self._process_pandoc_result(pandoc_result, output_path)
+                if pandoc_result:
+                    logger.info("Using Pandoc conversion results")
+                    result = self._process_pandoc_result(pandoc_result, output_path)
+                    structured_logger.log_pipeline_step(
+                        "pandoc",
+                        "completed",
+                        extraction_method="pandoc",
+                        content_length=result.get("content_length", 0),
+                    )
+                    structured_logger.log_extraction_result(result)
+                    return result
+            else:
+                logger.info("Pandoc is disabled in configuration")
 
             # Step 3: Final fallback to basic extraction
-            logger.warning("Both Grobid and Pandoc failed, using basic extraction")
-            return self._fallback_extraction(pdf_path, output_path)
+            structured_logger.log_pipeline_step(
+                "fallback", "started", pdf_path=str(pdf_path)
+            )
+            logger.warning(
+                "Both Grobid and Pandoc failed or disabled, using basic extraction"
+            )
+            result = self._fallback_extraction(pdf_path, output_path)
+            structured_logger.log_pipeline_step(
+                "fallback",
+                "completed",
+                extraction_method="fallback",
+                content_length=result.get("content_length", 0),
+            )
+            structured_logger.log_extraction_result(result)
+            return result
 
         except Exception as e:
+            structured_logger.log_error_with_context(
+                e,
+                {
+                    "pdf_path": str(pdf_path),
+                    "output_path": str(output_path),
+                    "processing_time": time.time() - start_time,
+                },
+            )
             logger.error("Pipeline processing failed: %s", e)
             raise PDFMilkerError(f"Failed to process PDF: {e}") from e
 
@@ -266,52 +391,48 @@ class PDFmilkerPipeline:
     ) -> Dict[str, Any]:
         """Process Grobid extraction results."""
         try:
-            # Combine all text content
             content_parts = []
 
-            # Add title
+            # Add title if available
             if grobid_result.get("title"):
                 content_parts.append(f"# {grobid_result['title']}\n")
 
-            # Add abstract
+            # Add abstract if available
             if grobid_result.get("abstract"):
                 content_parts.append(f"## Abstract\n\n{grobid_result['abstract']}\n")
 
-            # Add body text
+            # Add body text if available
             if grobid_result.get("body_text"):
                 content_parts.append(f"## Content\n\n{grobid_result['body_text']}\n")
 
-            # Process mathematical formulas
-            if grobid_result.get("math_formulas"):
-                content_parts.append("## Mathematical Formulas\n")
+            # Process mathematical formulas if available and Mathpix is enabled
+            if (
+                grobid_result.get("math_formulas")
+                and pdfmilker_config.is_mathpix_enabled()
+            ):
+                content_parts.append("## Mathematical Formulas\n\n")
                 for formula in grobid_result["math_formulas"]:
-                    latex_content = formula.get("content", "")
-                    if latex_content:
-                        # Use Mathpix for math processing if available
-                        processed_math = self.mathpix_processor.process_math_text(
-                            latex_content
-                        )
-                        content_parts.append(f"$${processed_math}$$\n")
+                    # Use Mathpix for math processing if available
+                    processed_math = self.mathpix_processor.process_math_text(
+                        formula.get("content", "")
+                    )
+                    content_parts.append(f"$${processed_math}$$\n\n")
 
-            # Process tables
+            # Add tables if available
             if grobid_result.get("tables"):
-                content_parts.append("## Tables\n")
+                content_parts.append("## Tables\n\n")
                 for table in grobid_result["tables"]:
                     table_md = self._convert_table_to_markdown(table)
-                    content_parts.append(table_md + "\n")
+                    content_parts.append(table_md + "\n\n")
 
-            # Process references
+            # Add references if available
             if grobid_result.get("references"):
-                content_parts.append("## References\n")
+                content_parts.append("## References\n\n")
                 for ref in grobid_result["references"]:
-                    ref_text = ref.get("raw", "")
-                    if ref_text:
-                        content_parts.append(f"- {ref_text}\n")
+                    content_parts.append(f"- {ref}\n")
 
             # Combine all content
             final_content = "\n".join(content_parts)
-
-            # Write to output file
             output_path.write_text(final_content, encoding="utf-8")
 
             return {
@@ -349,11 +470,19 @@ class PDFmilkerPipeline:
 
     def _fallback_extraction(self, pdf_path: Path, output_path: Path) -> Dict[str, Any]:
         """Enhanced fallback extraction with better math processing."""
-        try:
-            # Use basic PyMuPDF extraction as last resort
-            import fitz
+        start_time = time.time()
+        slug = slugify(pdf_path.stem)
+        meta_dir = output_path.parent / "meta"
+        structured_logger = create_structured_logger(meta_dir, slug)
 
-            doc = fitz.open(str(pdf_path))
+        try:
+            structured_logger.log_pipeline_step(
+                "fallback", "started", pdf_path=str(pdf_path)
+            )
+            # Use basic PyMuPDF extraction as last resort
+            import fitz  # PyMuPDF
+
+            doc = fitz.Document(str(pdf_path))
             content_parts = []
             math_expressions = []
             table_count = 0
@@ -390,6 +519,22 @@ class PDFmilkerPipeline:
             )
             output_path.write_text(final_content, encoding="utf-8")
 
+            structured_logger.log_pipeline_step(
+                "fallback",
+                "completed",
+                extraction_method="enhanced_fallback",
+                content_length=len(final_content),
+            )
+            structured_logger.log_extraction_result(
+                {
+                    "method": "enhanced_fallback",
+                    "output_path": str(output_path),
+                    "content_length": len(final_content),
+                    "math_expressions_count": len(math_expressions),
+                    "tables_count": table_count,
+                }
+            )
+
             return {
                 "success": True,
                 "method": "enhanced_fallback",
@@ -400,6 +545,14 @@ class PDFmilkerPipeline:
             }
 
         except Exception as e:
+            structured_logger.log_error_with_context(
+                e,
+                {
+                    "pdf_path": str(pdf_path),
+                    "output_path": str(output_path),
+                    "processing_time": time.time() - start_time,
+                },
+            )
             logger.error("Enhanced fallback extraction failed: %s", e)
             raise PDFMilkerError(f"All extraction methods failed: {e}") from e
 
@@ -560,38 +713,97 @@ class PDFmilkerPipeline:
 
     def extract_math_only(self, pdf_path: Path) -> List[Dict[str, Any]]:
         """
-        Extract only mathematical content from PDF.
+        Extract only mathematical expressions from a PDF.
+
         Args:
-            pdf_path (Path): Path to PDF file.
+            pdf_path: Path to the PDF file
+
         Returns:
             List[Dict[str, Any]]: List of mathematical expressions.
         """
+        start_time = time.time()
+        slug = slugify(pdf_path.stem)
+        meta_dir = pdf_path.parent / "meta"
+        structured_logger = create_structured_logger(meta_dir, slug)
+
         try:
-            # Try Mathpix first for math extraction
-            math_expressions = self.mathpix_processor.extract_math_from_pdf(pdf_path)
-
-            if math_expressions:
-                logger.info(
-                    "Extracted %d math expressions using Mathpix", len(math_expressions)
+            structured_logger.log_pipeline_step(
+                "math_only", "started", pdf_path=str(pdf_path)
+            )
+            # Try Mathpix first for math extraction - if enabled
+            if pdfmilker_config.is_mathpix_enabled():
+                math_expressions = self.mathpix_processor.extract_math_from_pdf(
+                    pdf_path
                 )
-                return math_expressions
 
-            # Fallback to Grobid for math extraction
-            grobid_result = self.grobid_extractor.extract_scientific_paper(pdf_path)
-            if grobid_result and grobid_result.get("math_formulas"):
-                logger.info(
-                    "Extracted %d math expressions using Grobid",
-                    len(grobid_result["math_formulas"]),
-                )
-                return grobid_result["math_formulas"]
+                if math_expressions:
+                    logger.info(
+                        "Extracted %d math expressions using Mathpix",
+                        len(math_expressions),
+                    )
+                    structured_logger.log_pipeline_step(
+                        "math_only",
+                        "completed",
+                        extraction_method="mathpix",
+                        math_expressions_count=len(math_expressions),
+                    )
+                    structured_logger.log_extraction_result(
+                        {"method": "mathpix", "math_expressions": math_expressions}
+                    )
+                    return math_expressions
+            else:
+                logger.info("Mathpix is disabled in configuration")
 
-            logger.warning("No mathematical content found")
+            # Fallback to Grobid for math extraction - if enabled
+            if pdfmilker_config.is_grobid_enabled():
+                grobid_result = self.grobid_extractor.extract_scientific_paper(pdf_path)
+                if grobid_result and grobid_result.get("math_formulas"):
+                    logger.info(
+                        "Extracted %d math expressions using Grobid",
+                        len(grobid_result["math_formulas"]),
+                    )
+                    structured_logger.log_pipeline_step(
+                        "math_only",
+                        "completed",
+                        extraction_method="grobid",
+                        math_expressions_count=len(grobid_result["math_formulas"]),
+                    )
+                    structured_logger.log_extraction_result(
+                        {
+                            "method": "grobid",
+                            "math_expressions": grobid_result["math_formulas"],
+                        }
+                    )
+                    return grobid_result["math_formulas"]
+            else:
+                logger.info("Grobid is disabled in configuration")
+
+            logger.warning("No mathematical content found or all services disabled")
+            structured_logger.log_pipeline_step(
+                "math_only",
+                "completed",
+                extraction_method="none",
+                math_expressions_count=0,
+            )
+            structured_logger.log_extraction_result(
+                {"method": "none", "math_expressions": []}
+            )
             return []
 
         except Exception as e:
+            structured_logger.log_error_with_context(
+                e,
+                {
+                    "pdf_path": str(pdf_path),
+                    "processing_time": time.time() - start_time,
+                },
+            )
             logger.error("Math extraction failed: %s", e)
             return []
 
 
 # Global instance
+pipeline = PDFmilkerPipeline()
+pipeline = PDFmilkerPipeline()
+pipeline = PDFmilkerPipeline()
 pipeline = PDFmilkerPipeline()
