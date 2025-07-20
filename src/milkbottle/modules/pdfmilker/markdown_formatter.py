@@ -56,12 +56,10 @@ class MarkdownFormatter:
             ],
         }
 
-        # Compile patterns
-        self.compiled_patterns = {}
-        for category, pattern_list in self.patterns.items():
-            self.compiled_patterns[category] = [
-                re.compile(pattern, re.IGNORECASE) for pattern in pattern_list
-            ]
+        self.compiled_patterns = {
+            category: [re.compile(pattern, re.IGNORECASE) for pattern in pattern_list]
+            for category, pattern_list in self.patterns.items()
+        }
 
     def format_text(self, text: str) -> str:
         """

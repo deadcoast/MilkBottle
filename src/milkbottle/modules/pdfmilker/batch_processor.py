@@ -215,7 +215,7 @@ class BatchProcessor:
                 logger.warning(f"PDF file not found: {pdf_file}")
                 continue
 
-            if not pdf_file.suffix.lower() == ".pdf":
+            if pdf_file.suffix.lower() != ".pdf":
                 logger.warning(f"Not a PDF file: {pdf_file}")
                 continue
 

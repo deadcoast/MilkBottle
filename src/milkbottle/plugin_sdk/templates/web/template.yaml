@@ -1,0 +1,8 @@
+author: MilkBottle Team
+description: Web-focused plugin template with HTTP server capabilities
+name: web
+tags:
+- web
+- http
+- server
+version: 1.0.0

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from rich.box import MINIMAL_DOUBLE_HEAD
 from rich.console import Console, RenderableType
@@ -13,6 +13,107 @@ from rich.text import Text
 from slugify import slugify as _slugify
 
 logger = logging.getLogger("milkbottle.utils")
+
+
+class ErrorHandler:
+    """Error handling utility for MilkBottle."""
+
+    def __init__(self):
+        """Initialize error handler."""
+        self.logger = logging.getLogger("milkbottle.error_handler")
+
+    def handle_error(self, error: Exception, context: str = "") -> None:
+        """Handle an error with logging and context.
+
+        Args:
+            error: The exception to handle
+            context: Additional context about the error
+        """
+        self.logger.error(f"Error in {context}: {error}")
+
+    def validate_input(self, value: Any, expected_type: type, name: str = "") -> bool:
+        """Validate input type.
+
+        Args:
+            value: Value to validate
+            expected_type: Expected type
+            name: Name of the value for error messages
+
+        Returns:
+            True if valid, False otherwise
+        """
+        if not isinstance(value, expected_type):
+            self.logger.error(
+                f"Invalid type for {name}: expected {expected_type}, got {type(value)}"
+            )
+            return False
+        return True
+
+
+class InputValidator:
+    """Input validation utility for MilkBottle."""
+
+    def __init__(self):
+        """Initialize input validator."""
+        self.logger = logging.getLogger("milkbottle.input_validator")
+
+    def validate_string(
+        self, value: Any, min_length: int = 0, max_length: Optional[int] = None
+    ) -> bool:
+        """Validate string input.
+
+        Args:
+            value: Value to validate
+            min_length: Minimum length
+            max_length: Maximum length
+
+        Returns:
+            True if valid, False otherwise
+        """
+        if not isinstance(value, str):
+            return False
+
+        if len(value) < min_length:
+            return False
+
+        if max_length and len(value) > max_length:
+            return False
+
+        return True
+
+    def validate_path(self, path: Any) -> bool:
+        """Validate path input.
+
+        Args:
+            path: Path to validate
+
+        Returns:
+            True if valid, False otherwise
+        """
+        try:
+            from pathlib import Path
+
+            Path(path)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    def validate_url(self, url: Any) -> bool:
+        """Validate URL input.
+
+        Args:
+            url: URL to validate
+
+        Returns:
+            True if valid, False otherwise
+        """
+        try:
+            from urllib.parse import urlparse
+
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])
+        except (TypeError, ValueError):
+            return False
 
 
 def get_console() -> Console:

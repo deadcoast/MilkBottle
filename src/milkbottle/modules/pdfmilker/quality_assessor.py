@@ -270,15 +270,13 @@ class QualityAssessor:
             score += min(len(valid_sentences) / max(len(sentences), 1), 1.0)
         total_checks += 1.0
 
-        # Check for paragraph structure
-        paragraphs = [p.strip() for p in body_text.split("\n\n") if p.strip()]
-        if paragraphs:
+        if paragraphs := [p.strip() for p in body_text.split("\n\n") if p.strip()]:
             score += min(len(paragraphs) / 5, 1.0)  # Expect at least 5 paragraphs
         total_checks += 1.0
 
         # Check for proper capitalization
         words = body_text.split()
-        capitalized_words = sum(1 for word in words if word and word[0].isupper())
+        capitalized_words = sum(bool(word and word[0].isupper()) for word in words)
         if words:
             capitalization_ratio = capitalized_words / len(words)
             score += min(capitalization_ratio, 1.0)
@@ -365,7 +363,6 @@ class QualityAssessor:
             table_score = 0.0
             table_checks = 0
 
-            # Check for table structure
             if isinstance(table, dict):
                 if "rows" in table and table["rows"]:
                     table_score += 1.0
@@ -379,11 +376,10 @@ class QualityAssessor:
                     table_score += 0.5
                     table_checks += 0.5
 
-            # Check for confidence score
-            if isinstance(table, dict) and table.get("confidence"):
-                confidence = float(table["confidence"])
-                table_score += min(confidence, 1.0)
-                table_checks += 1.0
+                if table.get("confidence"):
+                    confidence = float(table["confidence"])
+                    table_score += min(confidence, 1.0)
+                    table_checks += 1.0
 
             if table_checks > 0:
                 score += table_score / table_checks
@@ -455,7 +451,7 @@ class QualityAssessor:
             ref_checks = 0
 
             # Check for reference content
-            if ref and len(str(ref).strip()) > 0:
+            if ref and str(ref).strip() != "":
                 ref_score += 1.0
                 ref_checks += 1.0
 
@@ -492,8 +488,7 @@ class QualityAssessor:
         if body_text:
             # Check for proper line breaks
             lines = body_text.split("\n")
-            non_empty_lines = [line.strip() for line in lines if line.strip()]
-            if len(non_empty_lines) > 0:
+            if non_empty_lines := [line.strip() for line in lines if line.strip()]:
                 score += min(len(non_empty_lines) / max(len(lines), 1), 1.0)
             total_checks += 1.0
 
@@ -513,7 +508,7 @@ class QualityAssessor:
             "tables",
             "references",
         ]
-        present_sections = sum(1 for section in sections if content.get(section))
+        present_sections = sum(bool(content.get(section)) for section in sections)
         score += min(present_sections / len(sections), 1.0)
         total_checks += 1.0
 

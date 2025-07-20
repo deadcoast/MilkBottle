@@ -390,42 +390,48 @@ def image_processing_menu(console: Console) -> None:
         output_path = Path(output_dir)
 
         with console.status("[bold green]Extracting images with captions..."):
-            figures = image_processor.extract_figures_with_captions(pdf_file)
-
-            # Display results
-            stats = image_processor.get_image_statistics(figures)
-
-            table = Table(title="Image Extraction Results")
-            table.add_column("Metric", style="cyan")
-            table.add_column("Value", style="green")
-
-            table.add_row("Total Figures", str(stats["total_figures"]))
-            table.add_row("Pages with Figures", str(stats["pages_with_figures"]))
-            table.add_row("Captions Extracted", str(stats["captions_extracted"]))
-            table.add_row(
-                "Figure Numbers Assigned", str(stats["figure_numbers_assigned"])
-            )
-            table.add_row(
-                "Total File Size", f"{stats['total_file_size'] / 1024 / 1024:.1f} MB"
-            )
-
-            console.print(table)
-
-            # Quality distribution
-            quality_table = Table(title="Image Quality Distribution")
-            quality_table.add_column("Quality Level", style="cyan")
-            quality_table.add_column("Count", style="green")
-
-            for level, count in stats["quality_distribution"].items():
-                quality_table.add_row(level.title(), str(count))
-
-            console.print(quality_table)
-
-            console.print("[bold green]✅ Image extraction completed![/bold green]")
-            console.print(f"Images saved to: {output_path}")
-
+            _extracted_from_image_processing_menu_19(pdf_file, console, output_path)
     except Exception as e:
         console.print(f"[bold red]❌ Image processing failed: {e}[/bold red]")
+
+
+# TODO Rename this here and in `image_processing_menu`
+def _extracted_from_image_processing_menu_19(pdf_file, console, output_path):
+    figures = image_processor.extract_figures_with_captions(pdf_file)
+
+    # Display results
+    stats = image_processor.get_image_statistics(figures)
+
+    table = _extracted_from__extracted_from_image_processing_menu_19_24(
+        "Image Extraction Results", "Metric", "Value"
+    )
+    table.add_row("Total Figures", str(stats["total_figures"]))
+    table.add_row("Pages with Figures", str(stats["pages_with_figures"]))
+    table.add_row("Captions Extracted", str(stats["captions_extracted"]))
+    table.add_row("Figure Numbers Assigned", str(stats["figure_numbers_assigned"]))
+    table.add_row("Total File Size", f"{stats['total_file_size'] / 1024 / 1024:.1f} MB")
+
+    console.print(table)
+
+    quality_table = _extracted_from__extracted_from_image_processing_menu_19_24(
+        "Image Quality Distribution", "Quality Level", "Count"
+    )
+    for level, count in stats["quality_distribution"].items():
+        quality_table.add_row(level.title(), str(count))
+
+    console.print(quality_table)
+
+    console.print("[bold green]✅ Image extraction completed![/bold green]")
+    console.print(f"Images saved to: {output_path}")
+
+
+# TODO Rename this here and in `image_processing_menu`
+def _extracted_from__extracted_from_image_processing_menu_19_24(title, arg1, arg2):
+    result = Table(title=title)
+    result.add_column(arg1, style="cyan")
+    result.add_column(arg2, style="green")
+
+    return result
 
 
 def table_processing_menu(console: Console) -> None:
@@ -445,52 +451,62 @@ def table_processing_menu(console: Console) -> None:
         pdf_file = Path(pdf_path)
 
         with console.status("[bold green]Extracting tables with structure..."):
-            tables = table_processor.extract_tables_with_structure(pdf_file)
-
-            # Display results
-            stats = table_processor.get_table_statistics(tables)
-
-            table = Table(title="Table Extraction Results")
-            table.add_column("Metric", style="cyan")
-            table.add_column("Value", style="green")
-
-            table.add_row("Total Tables", str(stats["total_tables"]))
-            table.add_row("Pages with Tables", str(stats["pages_with_tables"]))
-            table.add_row("Tables with Headers", str(stats["tables_with_headers"]))
-            table.add_row("Captions Extracted", str(stats["captions_extracted"]))
-            table.add_row("Average Confidence", f"{stats['average_confidence']:.1%}")
-
-            console.print(table)
-
-            # Structure type distribution
-            structure_table = Table(title="Table Structure Types")
-            structure_table.add_column("Structure Type", style="cyan")
-            structure_table.add_column("Count", style="green")
-
-            for structure_type, count in stats["structure_types"].items():
-                structure_table.add_row(structure_type.title(), str(count))
-
-            console.print(structure_table)
-
-            # Export tables if requested
-            if tables and export_format:
-                output_dir = pdf_file.parent / "extracted_tables"
-                output_dir.mkdir(exist_ok=True)
-
-                for i, table in enumerate(tables):
-                    if export_format == "csv":
-                        output_file = output_dir / f"table_{i+1}.csv"
-                        table_processor.export_table_to_csv(table, output_file)
-                    elif export_format == "excel":
-                        output_file = output_dir / f"table_{i+1}.xlsx"
-                        table_processor.export_table_to_excel(table, output_file)
-
-                console.print(f"[green]Tables exported to: {output_dir}[/green]")
-
-            console.print("[bold green]✅ Table extraction completed![/bold green]")
-
+            _extracted_from_table_processing_menu_18(pdf_file, console, export_format)
     except Exception as e:
         console.print(f"[bold red]❌ Table processing failed: {e}[/bold red]")
+
+
+# TODO Rename this here and in `table_processing_menu`
+def _extracted_from_table_processing_menu_18(pdf_file, console, export_format):
+    tables = table_processor.extract_tables_with_structure(pdf_file)
+
+    # Display results
+    stats = table_processor.get_table_statistics(tables)
+
+    table = _extracted_from__extracted_from_table_processing_menu_18_23(
+        "Table Extraction Results", "Metric", "Value"
+    )
+    table.add_row("Total Tables", str(stats["total_tables"]))
+    table.add_row("Pages with Tables", str(stats["pages_with_tables"]))
+    table.add_row("Tables with Headers", str(stats["tables_with_headers"]))
+    table.add_row("Captions Extracted", str(stats["captions_extracted"]))
+    table.add_row("Average Confidence", f"{stats['average_confidence']:.1%}")
+
+    console.print(table)
+
+    structure_table = _extracted_from__extracted_from_table_processing_menu_18_23(
+        "Table Structure Types", "Structure Type", "Count"
+    )
+    for structure_type, count in stats["structure_types"].items():
+        structure_table.add_row(structure_type.title(), str(count))
+
+    console.print(structure_table)
+
+    # Export tables if requested
+    if tables and export_format:
+        output_dir = pdf_file.parent / "extracted_tables"
+        output_dir.mkdir(exist_ok=True)
+
+        for i, table in enumerate(tables):
+            if export_format == "csv":
+                output_file = output_dir / f"table_{i+1}.csv"
+                table_processor.export_table_to_csv(table, output_file)
+            elif export_format == "excel":
+                output_file = output_dir / f"table_{i+1}.xlsx"
+                table_processor.export_table_to_excel(table, output_file)
+
+        console.print(f"[green]Tables exported to: {output_dir}[/green]")
+
+    console.print("[bold green]✅ Table extraction completed![/bold green]")
+
+
+# TODO Rename this here and in `table_processing_menu`
+def _extracted_from__extracted_from_table_processing_menu_18_23(title, arg1, arg2):
+    result = Table(title=title)
+    result.add_column(arg1, style="cyan")
+    result.add_column(arg2, style="green")
+
+    return result
 
 
 def citation_processing_menu(console: Console) -> None:
@@ -510,63 +526,73 @@ def citation_processing_menu(console: Console) -> None:
         pdf_file = Path(pdf_path)
 
         with console.status("[bold green]Extracting citations and bibliography..."):
-            bibliography = citation_processor.extract_citations(pdf_file)
-
-            # Display results
-            stats = citation_processor.get_citation_statistics(bibliography)
-
-            table = Table(title="Citation Extraction Results")
-            table.add_column("Metric", style="cyan")
-            table.add_column("Value", style="green")
-
-            table.add_row("Total Citations", str(stats["total_citations"]))
-            table.add_row("Pages with Citations", str(stats["pages_with_citations"]))
-            table.add_row(
-                "Citations with Authors", str(stats["citations_with_authors"])
+            _extracted_from_citation_processing_menu_18(
+                pdf_file, console, export_format
             )
-            table.add_row("Citations with Years", str(stats["citations_with_years"]))
-            table.add_row("Citations with Titles", str(stats["citations_with_titles"]))
-            table.add_row("Citations with DOIs", str(stats["citations_with_dois"]))
-            table.add_row("Average Confidence", f"{stats['average_confidence']:.1%}")
-
-            console.print(table)
-
-            # Citation type distribution
-            type_table = Table(title="Citation Types")
-            type_table.add_column("Type", style="cyan")
-            type_table.add_column("Count", style="green")
-
-            for citation_type, count in stats["citation_types"].items():
-                type_table.add_row(citation_type.title(), str(count))
-
-            console.print(type_table)
-
-            # Export citations if requested
-            if bibliography.citations and export_format:
-                output_dir = pdf_file.parent / "extracted_citations"
-                output_dir.mkdir(exist_ok=True)
-
-                if export_format == "bibtex":
-                    output_file = output_dir / f"{pdf_file.stem}_citations.bib"
-                    with open(output_file, "w") as f:
-                        f.write(bibliography.to_bibtex())
-                elif export_format == "markdown":
-                    output_file = output_dir / f"{pdf_file.stem}_citations.md"
-                    with open(output_file, "w") as f:
-                        f.write(bibliography.to_markdown())
-                elif export_format == "json":
-                    output_file = output_dir / f"{pdf_file.stem}_citations.json"
-                    import json
-
-                    with open(output_file, "w") as f:
-                        json.dump(bibliography.to_dict(), f, indent=2)
-
-                console.print(f"[green]Citations exported to: {output_file}[/green]")
-
-            console.print("[bold green]✅ Citation extraction completed![/bold green]")
-
     except Exception as e:
         console.print(f"[bold red]❌ Citation processing failed: {e}[/bold red]")
+
+
+# TODO Rename this here and in `citation_processing_menu`
+def _extracted_from_citation_processing_menu_18(pdf_file, console, export_format):
+    bibliography = citation_processor.extract_citations(pdf_file)
+
+    # Display results
+    stats = citation_processor.get_citation_statistics(bibliography)
+
+    table = _extracted_from__extracted_from_citation_processing_menu_18_23(
+        "Citation Extraction Results", "Metric", "Value"
+    )
+    table.add_row("Total Citations", str(stats["total_citations"]))
+    table.add_row("Pages with Citations", str(stats["pages_with_citations"]))
+    table.add_row("Citations with Authors", str(stats["citations_with_authors"]))
+    table.add_row("Citations with Years", str(stats["citations_with_years"]))
+    table.add_row("Citations with Titles", str(stats["citations_with_titles"]))
+    table.add_row("Citations with DOIs", str(stats["citations_with_dois"]))
+    table.add_row("Average Confidence", f"{stats['average_confidence']:.1%}")
+
+    console.print(table)
+
+    type_table = _extracted_from__extracted_from_citation_processing_menu_18_23(
+        "Citation Types", "Type", "Count"
+    )
+    for citation_type, count in stats["citation_types"].items():
+        type_table.add_row(citation_type.title(), str(count))
+
+    console.print(type_table)
+
+    # Export citations if requested
+    if bibliography.citations and export_format:
+        output_dir = pdf_file.parent / "extracted_citations"
+        output_dir.mkdir(exist_ok=True)
+
+        if export_format == "bibtex":
+            output_file = output_dir / f"{pdf_file.stem}_citations.bib"
+            with open(output_file, "w") as f:
+                f.write(bibliography.to_bibtex())
+        elif export_format == "markdown":
+            output_file = output_dir / f"{pdf_file.stem}_citations.md"
+            with open(output_file, "w") as f:
+                f.write(bibliography.to_markdown())
+        elif export_format == "json":
+            output_file = output_dir / f"{pdf_file.stem}_citations.json"
+            import json
+
+            with open(output_file, "w") as f:
+                json.dump(bibliography.to_dict(), f, indent=2)
+
+        console.print(f"[green]Citations exported to: {output_file}[/green]")
+
+    console.print("[bold green]✅ Citation extraction completed![/bold green]")
+
+
+# TODO Rename this here and in `citation_processing_menu`
+def _extracted_from__extracted_from_citation_processing_menu_18_23(title, arg1, arg2):
+    result = Table(title=title)
+    result.add_column(arg1, style="cyan")
+    result.add_column(arg2, style="green")
+
+    return result
 
 
 def configuration_validation_menu(console: Console) -> None:
@@ -575,32 +601,36 @@ def configuration_validation_menu(console: Console) -> None:
 
     try:
         with console.status("[bold green]Validating configuration..."):
-            validation_results = config_validator.validate_config(pdfmilker_config)
-
-            # Display validation report
-            report = config_validator.get_validation_report()
-            console.print(Panel(report, title="Configuration Validation Report"))
-
-            # Display detailed results
-            if validation_results["errors"]:
-                console.print("\n[bold red]Validation Errors:[/bold red]")
-                for error in validation_results["errors"]:
-                    console.print(f"  • {error['message']}")
-
-            if validation_results["recommendations"]:
-                console.print("\n[bold yellow]Recommendations:[/bold yellow]")
-                for rec in validation_results["recommendations"]:
-                    console.print(f"  • {rec}")
-
-            if validation_results["overall_valid"]:
-                console.print("[bold green]✅ Configuration is valid![/bold green]")
-            else:
-                console.print(
-                    "[bold red]❌ Configuration has issues that need to be addressed.[/bold red]"
-                )
-
+            _extracted_from_configuration_validation_menu_7(console)
     except Exception as e:
         console.print(f"[bold red]❌ Configuration validation failed: {e}[/bold red]")
+
+
+# TODO Rename this here and in `configuration_validation_menu`
+def _extracted_from_configuration_validation_menu_7(console):
+    validation_results = config_validator.validate_config(pdfmilker_config)
+
+    # Display validation report
+    report = config_validator.get_validation_report()
+    console.print(Panel(report, title="Configuration Validation Report"))
+
+    # Display detailed results
+    if validation_results["errors"]:
+        console.print("\n[bold red]Validation Errors:[/bold red]")
+        for error in validation_results["errors"]:
+            console.print(f"  • {error['message']}")
+
+    if validation_results["recommendations"]:
+        console.print("\n[bold yellow]Recommendations:[/bold yellow]")
+        for rec in validation_results["recommendations"]:
+            console.print(f"  • {rec}")
+
+    if validation_results["overall_valid"]:
+        console.print("[bold green]✅ Configuration is valid![/bold green]")
+    else:
+        console.print(
+            "[bold red]❌ Configuration has issues that need to be addressed.[/bold red]"
+        )
 
 
 def error_recovery_status_menu(console: Console) -> None:
@@ -714,7 +744,7 @@ def configure_batch_settings(console: Console) -> Dict[str, Any]:
 def display_batch_results(console: Console, results: List[Any]) -> None:
     """Display batch processing results."""
     successful = sum(
-        1 for r in results if not hasattr(r, "success_ratio") or r.success_ratio >= 0.5
+        bool(not hasattr(r, "success_ratio") or r.success_ratio >= 0.5) for r in results
     )
     total = len(results)
 

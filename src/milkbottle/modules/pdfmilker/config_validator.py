@@ -27,7 +27,7 @@ class ValidationResult:
         self.is_valid = is_valid
         self.message = message
         self.details = details or {}
-        self.severity = "error" if not is_valid else "info"
+        self.severity = "info" if is_valid else "error"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -150,7 +150,10 @@ class MathpixHealthCheck(ServiceHealthCheck):
                 return ValidationResult(
                     True,
                     "Mathpix service is healthy",
-                    {"service": "mathpix", "app_id": config.mathpix_app_id[:8] + "..."},
+                    {
+                        "service": "mathpix",
+                        "app_id": f"{config.mathpix_app_id[:8]}...",
+                    },
                 )
             elif response.status_code == 401:
                 return ValidationResult(
@@ -202,23 +205,22 @@ class PandocHealthCheck(ServiceHealthCheck):
                 timeout=self.timeout,
             )
 
-            if result.returncode == 0:
-                # Extract version from output
-                version_line = result.stdout.split("\n")[0]
-                version = version_line.replace("pandoc", "").strip()
-
-                return ValidationResult(
-                    True,
-                    f"Pandoc is available (version: {version})",
-                    {"service": "pandoc", "version": version},
-                )
-            else:
+            if result.returncode != 0:
                 return ValidationResult(
                     False,
                     "Pandoc is not available or not working",
                     {"service": "pandoc", "return_code": result.returncode},
                 )
 
+            # Extract version from output
+            version_line = result.stdout.split("\n")[0]
+            version = version_line.replace("pandoc", "").strip()
+
+            return ValidationResult(
+                True,
+                f"Pandoc is available (version: {version})",
+                {"service": "pandoc", "version": version},
+            )
         except FileNotFoundError:
             return ValidationResult(
                 False,
@@ -503,7 +505,7 @@ class ConfigValidator:
     def _generate_validation_summary(self) -> Dict[str, Any]:
         """Generate validation summary."""
         total_checks = len(self.validation_results)
-        passed_checks = sum(1 for r in self.validation_results if r.is_valid)
+        passed_checks = sum(bool(r.is_valid) for r in self.validation_results)
         failed_checks = total_checks - passed_checks
 
         # Group results by severity
@@ -515,7 +517,7 @@ class ConfigValidator:
             r for r in self.validation_results if r.is_valid and r.severity == "info"
         ]
 
-        summary = {
+        return {
             "overall_valid": failed_checks == 0,
             "total_checks": total_checks,
             "passed_checks": passed_checks,
@@ -528,8 +530,6 @@ class ConfigValidator:
             "info": [r.to_dict() for r in info],
             "recommendations": self._generate_recommendations(),
         }
-
-        return summary
 
     def _generate_recommendations(self) -> List[str]:
         """Generate recommendations based on validation results."""

@@ -181,7 +181,7 @@ class PluginLoader:
             Plugin manifest
         """
         with open(manifest_path, "r", encoding="utf-8") as f:
-            if manifest_path.suffix == ".yaml" or manifest_path.suffix == ".yml":
+            if manifest_path.suffix in [".yaml", ".yml"]:
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
@@ -200,13 +200,12 @@ class PluginLoader:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
 
-            if archive_path.suffix == ".zip":
-                with zipfile.ZipFile(archive_path, "r") as zip_ref:
-                    zip_ref.extractall(temp_path)
-            else:
+            if archive_path.suffix != ".zip":
                 # Handle other archive formats
                 raise PluginError(f"Unsupported archive format: {archive_path.suffix}")
 
+            with zipfile.ZipFile(archive_path, "r") as zip_ref:
+                zip_ref.extractall(temp_path)
             # Look for manifest in extracted files
             manifest_path = temp_path / PLUGIN_MANIFEST_FILE
             if not manifest_path.exists():
@@ -456,7 +455,6 @@ class PluginManager:
 
             # Register with registry
             if hasattr(plugin_module, "get_cli"):
-                cli_app = plugin_module.get_cli()
                 # Add to registry (this would need registry modification)
                 self._active_plugins.add(plugin_name)
 

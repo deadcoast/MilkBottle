@@ -177,9 +177,7 @@ class ErrorRecoveryManager:
                                 fallback_error, f"{strategy_name}_fallback", context
                             )
 
-                    # Create partial result if possible
-                    partial_result = self._create_partial_result(error, context)
-                    if partial_result:
+                    if partial_result := self._create_partial_result(error, context):
                         self.partial_results.append(partial_result)
                         return partial_result
 
@@ -342,10 +340,13 @@ class ErrorRecoveryManager:
             )
 
         else:
-            suggestions.append("Try the operation again")
-            suggestions.append("Check the input parameters")
-            suggestions.append("Verify the configuration settings")
-
+            suggestions.extend(
+                (
+                    "Try the operation again",
+                    "Check the input parameters",
+                    "Verify the configuration settings",
+                )
+            )
         return suggestions
 
 

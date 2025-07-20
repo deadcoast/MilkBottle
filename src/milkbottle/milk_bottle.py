@@ -17,7 +17,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from .advanced_analytics import get_advanced_analytics
-from .enterprise_features import get_enterprise_features
+from .enterprise_features import AuditEventType, get_enterprise_features
 from .export_menu import get_export_menu
 from .preview_system import get_preview_system
 from .registry import get_registry
@@ -341,25 +341,30 @@ def _handle_audit_reports() -> None:
 
     # Show recent events
     if report["recent_events"]:
-        console.print("\n[bold]Recent Events:[/bold]")
-        table = Table()
-        table.add_column("Time", style="dim")
-        table.add_column("User", style="cyan")
-        table.add_column("Event", style="yellow")
-        table.add_column("Resource", style="green")
-        table.add_column("Status", style="red")
+        _extracted_from__handle_audit_reports_32(report)
 
-        for event in report["recent_events"][:10]:
-            status = "✓" if event["success"] else "✗"
-            table.add_row(
-                event["timestamp"][:19],  # Remove timezone info
-                event["user_id"],
-                event["event_type"],
-                event["resource"],
-                status,
-            )
 
-        console.print(table)
+# TODO Rename this here and in `_handle_audit_reports`
+def _extracted_from__handle_audit_reports_32(report):
+    console.print("\n[bold]Recent Events:[/bold]")
+    table = Table()
+    table.add_column("Time", style="dim")
+    table.add_column("User", style="cyan")
+    table.add_column("Event", style="yellow")
+    table.add_column("Resource", style="green")
+    table.add_column("Status", style="red")
+
+    for event in report["recent_events"][:10]:
+        status = "✓" if event["success"] else "✗"
+        table.add_row(
+            event["timestamp"][:19],  # Remove timezone info
+            event["user_id"],
+            event["event_type"],
+            event["resource"],
+            status,
+        )
+
+    console.print(table)
 
 
 def _show_advanced_analytics() -> None:
@@ -385,8 +390,10 @@ def _show_advanced_analytics() -> None:
         return
 
     try:
+        # Analyze content with advanced analytics
         analytics = get_advanced_analytics()
-        result = analytics.analyze_content(str(file_path))
+        content_data = {"file_path": file_path}
+        result = analytics.analyze_content(content_data)
 
         console.print("\n[bold]Analytics Results:[/bold]")
         console.print(f"Quality Score: {result.quality_metrics.overall_score:.2f}")
@@ -515,10 +522,10 @@ def _show_export_menu() -> None:
             console.print(f"\nSelected formats: {', '.join(selected_formats)}")
 
             # Show format previews
-            previews = export_menu.show_format_previews(sample_content)
+            _previews = export_menu.show_format_previews(sample_content)
 
             # Configure export options
-            export_config = export_menu.configure_export_options()
+            _export_config = export_menu.configure_export_options()
 
             # Execute export
             output_dir = Path("exports")
@@ -585,7 +592,7 @@ def _show_wizards() -> None:
         if enterprise.current_user:
             enterprise.audit_logger.log_event(
                 user_id=enterprise.current_user.username,
-                event_type=enterprise.audit_logger.AuditEventType.CONFIG_CHANGE,
+                event_type=AuditEventType.CONFIG_CHANGE,
                 resource=wizard_type,
                 action="wizard_configuration",
                 details={"wizard_type": wizard_type, "config": config},
@@ -597,7 +604,7 @@ def _show_wizards() -> None:
         if enterprise.current_user:
             enterprise.audit_logger.log_event(
                 user_id=enterprise.current_user.username,
-                event_type=enterprise.audit_logger.AuditEventType.CONFIG_CHANGE,
+                event_type=AuditEventType.CONFIG_CHANGE,
                 resource=wizard_type,
                 action="wizard_configuration",
                 details={"wizard_type": wizard_type},

@@ -148,9 +148,8 @@ class UserManager:
     def _save_users(self) -> None:
         """Save users to storage."""
         try:
-            data = {}
-            for username, user in self.users.items():
-                data[username] = {
+            data = {
+                username: {
                     "username": user.username,
                     "email": user.email,
                     "role": user.role.value,
@@ -163,7 +162,8 @@ class UserManager:
                     "permissions": list(user.permissions),
                     "metadata": user.metadata,
                 }
-
+                for username, user in self.users.items()
+            }
             with open(self.users_file, "w") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
@@ -196,9 +196,8 @@ class UserManager:
     def _save_sessions(self) -> None:
         """Save sessions to storage."""
         try:
-            data = {}
-            for session_id, session in self.sessions.items():
-                data[session_id] = {
+            data = {
+                session_id: {
                     "session_id": session.session_id,
                     "user_id": session.user_id,
                     "created_at": session.created_at.isoformat(),
@@ -207,7 +206,8 @@ class UserManager:
                     "user_agent": session.user_agent,
                     "is_active": session.is_active,
                 }
-
+                for session_id, session in self.sessions.items()
+            }
             with open(self.sessions_file, "w") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
@@ -446,10 +446,7 @@ class UserManager:
         Returns:
             True if user has permission, False otherwise
         """
-        if user.role == UserRole.ADMIN:
-            return True
-
-        return permission in user.permissions
+        return True if user.role == UserRole.ADMIN else permission in user.permissions
 
 
 class AuditLogger:

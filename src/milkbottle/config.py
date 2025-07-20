@@ -43,6 +43,14 @@ DEFAULTS: dict[str, Any] = {
         "dry_run": False,
         "verbose": False,
     },
+    "plugin_system": {
+        "plugin_dir": "~/.milkbottle/plugins",
+        "enable_marketplace": True,
+        "marketplace_url": "https://marketplace.milkbottle.dev/api/v1",
+        "auto_update": False,
+        "security_scan": True,
+        "performance_monitoring": True,
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -67,6 +75,10 @@ class MilkBottleConfig:
     pdfmilker_config: Dict[str, Any] = field(
         default_factory=lambda: dict(DEFAULTS["pdfmilker"])
     )
+    plugin_system_config: Dict[str, Any] = field(
+        default_factory=lambda: dict(DEFAULTS["plugin_system"])
+    )
+    version: str = "5.0.0"
 
     def as_dict(self) -> Dict[str, Any]:
         """Return config as plain dict (for JSON serialization)."""
@@ -78,6 +90,8 @@ class MilkBottleConfig:
             "global": self.global_settings,
             "venvmilker": self.venvmilker_config,
             "pdfmilker": self.pdfmilker_config,
+            "plugin_system": self.plugin_system_config,
+            "version": self.version,
         }
 
     def get_bottle_config(self, bottle_name: str) -> Dict[str, Any]:
@@ -87,6 +101,23 @@ class MilkBottleConfig:
         elif bottle_name == "pdfmilker":
             return self.pdfmilker_config
         return self.bottles.get(bottle_name, {})
+
+    @property
+    def plugin_dir(self) -> str:
+        """Get plugin directory path."""
+        return self.plugin_system_config.get("plugin_dir", "~/.milkbottle/plugins")
+
+    @property
+    def enable_marketplace(self) -> bool:
+        """Check if marketplace is enabled."""
+        return self.plugin_system_config.get("enable_marketplace", True)
+
+    @property
+    def marketplace_url(self) -> str:
+        """Get marketplace URL."""
+        return self.plugin_system_config.get(
+            "marketplace_url", "https://marketplace.milkbottle.dev/api/v1"
+        )
 
     def is_dry_run(self) -> bool:
         """Check if dry run mode is enabled."""

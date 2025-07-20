@@ -1,0 +1,8 @@
+author: MilkBottle Team
+description: CLI-focused plugin template with Click integration
+name: cli
+tags:
+- cli
+- click
+- command-line
+version: 1.0.0

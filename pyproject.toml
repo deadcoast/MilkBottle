@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-milk = "milkbottle.milk_bottle:run_cli"
+milk = "milkbottle.cli:cli"
 
 [project.entry-points.'milkbottle.bottles']
 venvmilker = "milkbottle.modules.venvmilker:get_cli"

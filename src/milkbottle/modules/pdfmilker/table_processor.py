@@ -144,19 +144,17 @@ class TableProcessor:
         self, text_dict: Dict[str, Any]
     ) -> List[List[Dict[str, Any]]]:
         """Identify regions that might contain tables."""
-        regions = []
         blocks = text_dict.get("blocks", [])
 
         # Group blocks by vertical alignment
         aligned_blocks = self._group_aligned_blocks(blocks)
 
-        for aligned_group in aligned_blocks:
-            if len(aligned_group) >= self.min_table_size:
-                # Check if this looks like a table
-                if self._looks_like_table(aligned_group):
-                    regions.append(aligned_group)
-
-        return regions
+        return [
+            aligned_group
+            for aligned_group in aligned_blocks
+            if len(aligned_group) >= self.min_table_size
+            and self._looks_like_table(aligned_group)
+        ]
 
     def _group_aligned_blocks(
         self, blocks: List[Dict[str, Any]]
@@ -234,9 +232,7 @@ class TableProcessor:
             text = block.get("text", "").strip()
             bbox = block.get("bbox", [0, 0, 0, 0])
 
-            # Split text and record x-positions
-            words = text.split()
-            if words:
+            if words := text.split():
                 # Use the x-position of the block as a column marker
                 positions.add(bbox[0])
 
@@ -295,8 +291,7 @@ class TableProcessor:
         rows = []
 
         for block in blocks:
-            text = block.get("text", "").strip()
-            if text:
+            if text := block.get("text", "").strip():
                 # Split text into columns
                 columns = self._split_into_columns(text)
                 rows.append(columns)
@@ -436,9 +431,7 @@ class TableProcessor:
                     bbox = block.get("bbox", (0, 0, 0, 0))
 
                     if text and len(text) > 10:
-                        # Check if text matches table caption patterns
-                        caption_info = self._identify_table_caption(text, bbox)
-                        if caption_info:
+                        if caption_info := self._identify_table_caption(text, bbox):
                             caption_info["page_number"] = page_num
                             captions.append(caption_info)
 
@@ -453,8 +446,7 @@ class TableProcessor:
     ) -> Optional[Dict[str, Any]]:
         """Identify if text is a table caption."""
         for pattern in self.table_patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
+            if match := re.search(pattern, text, re.IGNORECASE):
                 if len(match.groups()) == 2:
                     table_num = match.group(1)
                     caption_text = match.group(2).strip()
@@ -520,13 +512,10 @@ class TableProcessor:
         if table.column_count < 2:
             return False
 
-        if (
-            table.row_count > self.max_table_size
-            or table.column_count > self.max_table_size
-        ):
-            return False
-
-        return True
+        return (
+            table.row_count <= self.max_table_size
+            and table.column_count <= self.max_table_size
+        )
 
     def _post_process_tables(self, tables: List[TableStructure]) -> None:
         """Post-process extracted tables."""
@@ -567,12 +556,12 @@ class TableProcessor:
 
         stats = {
             "total_tables": len(tables),
-            "pages_with_tables": len(set(t.page_number for t in tables)),
+            "pages_with_tables": len({t.page_number for t in tables}),
             "structure_types": {},
             "size_distribution": {"small": 0, "medium": 0, "large": 0},
-            "captions_extracted": sum(1 for t in tables if t.caption),
-            "table_numbers_assigned": sum(1 for t in tables if t.table_number),
-            "tables_with_headers": sum(1 for t in tables if t.has_headers),
+            "captions_extracted": sum(bool(t.caption) for t in tables),
+            "table_numbers_assigned": sum(bool(t.table_number) for t in tables),
+            "tables_with_headers": sum(bool(t.has_headers) for t in tables),
             "average_confidence": sum(t.confidence for t in tables) / len(tables),
         }
 

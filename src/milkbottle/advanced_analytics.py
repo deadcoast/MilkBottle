@@ -188,12 +188,8 @@ class AdvancedAnalytics:
         """Extract text-based features."""
         features = {}
 
-        # Combine all text content
-        all_text = ""
         pages = content_data.get("pages", [])
-        for page in pages:
-            all_text += page.get("text", "") + " "
-
+        all_text = "".join(page.get("text", "") + " " for page in pages)
         if all_text.strip():
             # Basic text statistics
             words = all_text.split()
@@ -275,15 +271,13 @@ class AdvancedAnalytics:
         features.update(
             {
                 "academic_score": sum(
-                    1 for word in academic_keywords if word in title or word in abstract
+                    word in title or word in abstract for word in academic_keywords
                 ),
                 "technical_score": sum(
-                    1
-                    for word in technical_keywords
-                    if word in title or word in abstract
+                    word in title or word in abstract for word in technical_keywords
                 ),
                 "business_score": sum(
-                    1 for word in business_keywords if word in title or word in abstract
+                    word in title or word in abstract for word in business_keywords
                 ),
                 "has_abstract": bool(abstract),
                 "title_length": len(title.split()),
@@ -345,7 +339,9 @@ class AdvancedAnalytics:
         # Readability score
         avg_sentence_length = text_features.get("avg_sentence_length", 0)
         avg_word_length = text_features.get("avg_word_length", 0)
-        readability_score = max(0, min(1, 1 - (avg_sentence_length - 15) / 30))
+        readability_score = max(
+            0, min(1, 1 - (avg_sentence_length - 15) / 30 - (avg_word_length - 5) / 10)
+        )
 
         # Coherence score
         vocabulary_richness = text_features.get("vocabulary_richness", 0)
@@ -671,15 +667,15 @@ class AdvancedAnalytics:
         if result.quality_metrics.recommendations or result.quality_metrics.warnings:
             console.print("\n[bold]Recommendations & Warnings[/bold]")
 
-            if result.quality_metrics.recommendations:
-                console.print("\n[bold green]Recommendations:[/bold green]")
-                for rec in result.quality_metrics.recommendations:
-                    console.print(f"• {rec}")
+        if result.quality_metrics.recommendations:
+            console.print("\n[bold green]Recommendations:[/bold green]")
+            for rec in result.quality_metrics.recommendations:
+                console.print(f"• {rec}")
 
-            if result.quality_metrics.warnings:
-                console.print("\n[bold yellow]Warnings:[/bold yellow]")
-                for warning in result.quality_metrics.warnings:
-                    console.print(f"⚠️ {warning}")
+        if result.quality_metrics.warnings:
+            console.print("\n[bold yellow]Warnings:[/bold yellow]")
+            for warning in result.quality_metrics.warnings:
+                console.print(f"⚠️ {warning}")
 
 
 def get_advanced_analytics(model_path: Optional[Path] = None) -> AdvancedAnalytics:

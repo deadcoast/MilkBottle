@@ -7,6 +7,7 @@ before committing to the export.
 
 from __future__ import annotations
 
+import contextlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -184,13 +185,10 @@ class ExportOptionsMenu:
         else:
             selected_indices = []
             for choice in selection.split(","):
-                try:
+                with contextlib.suppress(ValueError):
                     idx = int(choice.strip()) - 1
                     if 0 <= idx < len(self.available_formats):
                         selected_indices.append(idx)
-                except ValueError:
-                    pass
-
             format_ids = list(self.available_formats.keys())
             self.selected_formats = [
                 format_ids[i] for i in selected_indices if i < len(format_ids)
@@ -299,23 +297,22 @@ class ExportOptionsMenu:
         lines = []
 
         if content_data.get("title"):
-            lines.append(f"Title: {content_data['title']}")
-            lines.append("")
-
+            lines.extend((f"Title: {content_data['title']}", ""))
         if content_data.get("abstract"):
-            lines.append(f"Abstract: {content_data['abstract']}")
-            lines.append("")
-
+            lines.extend((f"Abstract: {content_data['abstract']}", ""))
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages[:2]):  # Show first 2 pages
-            lines.append(f"Page {i+1}:")
-            lines.append(
-                page.get("text", "")[:200] + "..."
-                if len(page.get("text", "")) > 200
-                else page.get("text", "")
+            lines.extend(
+                (
+                    f"Page {i + 1}:",
+                    (
+                        page.get("text", "")[:200] + "..."
+                        if len(page.get("text", "")) > 200
+                        else page.get("text", "")
+                    ),
+                    "",
+                )
             )
-            lines.append("")
-
         return "\n".join(lines)
 
     def _generate_json_preview(self, content_data: Dict[str, Any]) -> str:
@@ -340,23 +337,22 @@ class ExportOptionsMenu:
         lines = []
 
         if content_data.get("title"):
-            lines.append(f"# {content_data['title']}")
-            lines.append("")
-
+            lines.extend((f"# {content_data['title']}", ""))
         if content_data.get("abstract"):
-            lines.append(f"**Abstract:** {content_data['abstract']}")
-            lines.append("")
-
+            lines.extend((f"**Abstract:** {content_data['abstract']}", ""))
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages[:2]):  # Show first 2 pages
-            lines.append(f"## Page {i+1}")
-            lines.append(
-                page.get("text", "")[:200] + "..."
-                if len(page.get("text", "")) > 200
-                else page.get("text", "")
+            lines.extend(
+                (
+                    f"## Page {i + 1}",
+                    (
+                        page.get("text", "")[:200] + "..."
+                        if len(page.get("text", "")) > 200
+                        else page.get("text", "")
+                    ),
+                    "",
+                )
             )
-            lines.append("")
-
         return "\n".join(lines)
 
     def _generate_html_preview(self, content_data: Dict[str, Any]) -> str:
@@ -378,9 +374,12 @@ class ExportOptionsMenu:
 
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages[:2]):  # Show first 2 pages
-            html.append(f"<h2>Page {i+1}</h2>")
-            html.append(f"<p>{page.get('text', '')[:200]}...</p>")
-
+            html.extend(
+                (
+                    f"<h2>Page {i + 1}</h2>",
+                    f"<p>{page.get('text', '')[:200]}...</p>",
+                )
+            )
         html.extend(["</body>", "</html>"])
         return "\n".join(html)
 
@@ -389,26 +388,29 @@ class ExportOptionsMenu:
         lines = ["\\documentclass{article}", "\\begin{document}", ""]
 
         if content_data.get("title"):
-            lines.append(f"\\title{{{content_data['title']}}}")
-            lines.append("\\maketitle")
-            lines.append("")
-
+            lines.extend((f"\\title{{{content_data['title']}}}", "\\maketitle", ""))
         if content_data.get("abstract"):
-            lines.append("\\begin{abstract}")
-            lines.append(content_data["abstract"])
-            lines.append("\\end{abstract}")
-            lines.append("")
-
+            lines.extend(
+                (
+                    "\\begin{abstract}",
+                    content_data["abstract"],
+                    "\\end{abstract}",
+                    "",
+                )
+            )
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages[:2]):  # Show first 2 pages
-            lines.append(f"\\section*{{Page {i+1}}}")
-            lines.append(
-                page.get("text", "")[:200] + "..."
-                if len(page.get("text", "")) > 200
-                else page.get("text", "")
+            lines.extend(
+                (
+                    f"\\section*{{Page {i + 1}}}",
+                    (
+                        page.get("text", "")[:200] + "..."
+                        if len(page.get("text", "")) > 200
+                        else page.get("text", "")
+                    ),
+                    "",
+                )
             )
-            lines.append("")
-
         lines.extend(["\\end{document}"])
         return "\n".join(lines)
 
@@ -447,7 +449,7 @@ class ExportOptionsMenu:
         # Create preview panel
         preview_panel = Panel(
             (
-                preview.content[:500] + "..."
+                f"{preview.content[:500]}..."
                 if len(preview.content) > 500
                 else preview.content
             ),
@@ -605,22 +607,14 @@ class ExportOptionsMenu:
         lines = []
 
         if content_data.get("title"):
-            lines.append(content_data["title"])
-            lines.append("=" * len(content_data["title"]))
-            lines.append("")
+            lines.extend([content_data["title"], "=" * len(content_data["title"]), ""])
 
         if content_data.get("abstract"):
-            lines.append("ABSTRACT")
-            lines.append("-" * 8)
-            lines.append(content_data["abstract"])
-            lines.append("")
+            lines.extend(["ABSTRACT", "-" * 8, content_data["abstract"], ""])
 
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages):
-            lines.append(f"PAGE {i+1}")
-            lines.append("-" * 6)
-            lines.append(page.get("text", ""))
-            lines.append("")
+            lines.extend([f"PAGE {i+1}", "-" * 6, page.get("text", ""), ""])
 
         return "\n".join(lines)
 
@@ -643,24 +637,14 @@ class ExportOptionsMenu:
         lines = []
 
         if content_data.get("title"):
-            lines.append(f"# {content_data['title']}")
-            lines.append("")
-
-        if config.get("include_toc", True):
-            lines.append("## Table of Contents")
-            lines.append("")
-            # Add TOC entries here
+            lines.extend([f"# {content_data['title']}", ""])
 
         if content_data.get("abstract"):
-            lines.append("## Abstract")
-            lines.append(content_data["abstract"])
-            lines.append("")
+            lines.extend([f"**Abstract:** {content_data['abstract']}", ""])
 
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages):
-            lines.append(f"## Page {i+1}")
-            lines.append(page.get("text", ""))
-            lines.append("")
+            lines.extend([f"## Page {i+1}", page.get("text", ""), ""])
 
         return "\n".join(lines)
 
@@ -673,20 +657,21 @@ class ExportOptionsMenu:
             "<html>",
             "<head>",
             "<meta charset='utf-8'>",
-            "<title>"
-            + (content_data.get("title", "Document") or "Document")
-            + "</title>",
+            f"<title>{content_data.get('title', 'Document') or 'Document'}</title>",
         ]
 
         if config.get("include_css", True):
-            html.append("<style>")
-            html.append("body { font-family: Arial, sans-serif; margin: 40px; }")
-            html.append("h1 { color: #333; }")
-            html.append("h2 { color: #666; }")
-            html.append("</style>")
+            html.extend(
+                [
+                    "<style>",
+                    "body { font-family: Arial, sans-serif; margin: 40px; }",
+                    "h1 { color: #333; }",
+                    "h2 { color: #666; }",
+                    "</style>",
+                ]
+            )
 
-        html.append("</head>")
-        html.append("<body>")
+        html.extend(["</head>", "<body>"])
 
         if content_data.get("title"):
             html.append(f"<h1>{content_data['title']}</h1>")
@@ -696,8 +681,7 @@ class ExportOptionsMenu:
 
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages):
-            html.append(f"<h2>Page {i+1}</h2>")
-            html.append(f"<p>{page.get('text', '')}</p>")
+            html.extend([f"<h2>Page {i+1}</h2>", f"<p>{page.get('text', '')}</p>"])
 
         html.extend(["</body>", "</html>"])
         return "\n".join(html)
@@ -716,21 +700,21 @@ class ExportOptionsMenu:
         ]
 
         if content_data.get("title"):
-            lines.append(f"\\title{{{content_data['title']}}}")
-            lines.append("\\maketitle")
-            lines.append("")
+            lines.extend([f"\\title{{{content_data['title']}}}", "\\maketitle", ""])
 
         if content_data.get("abstract"):
-            lines.append("\\begin{abstract}")
-            lines.append(content_data["abstract"])
-            lines.append("\\end{abstract}")
-            lines.append("")
+            lines.extend(
+                [
+                    "\\begin{abstract}",
+                    content_data["abstract"],
+                    "\\end{abstract}",
+                    "",
+                ]
+            )
 
         pages = content_data.get("pages", [])
         for i, page in enumerate(pages):
-            lines.append(f"\\section*{{Page {i+1}}}")
-            lines.append(page.get("text", ""))
-            lines.append("")
+            lines.extend([f"\\section*{{Page {i+1}}}", page.get("text", ""), ""])
 
         lines.extend(["\\end{document}"])
         return "\n".join(lines)
@@ -751,18 +735,16 @@ def export_content_interactive(
     export_menu = get_export_menu()
 
     # Step 1: Format selection
-    selected_formats = export_menu.show_format_selection(content_data)
+    export_menu.show_format_selection(content_data)
 
     # Step 2: Format previews
-    previews = export_menu.show_format_previews(content_data)
+    export_menu.show_format_previews(content_data)
 
     # Step 3: Configuration
-    config = export_menu.configure_export_options()
+    export_menu.configure_export_options()
 
     # Step 4: Execute export
-    results = export_menu.execute_export(content_data, output_dir)
-
-    return results
+    return export_menu.execute_export(content_data, output_dir)
 
 
 @click.command()

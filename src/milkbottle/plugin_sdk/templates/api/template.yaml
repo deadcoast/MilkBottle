@@ -1,0 +1,8 @@
+author: MilkBottle Team
+description: API-focused plugin template with REST API capabilities
+name: api
+tags:
+- api
+- rest
+- json
+version: 1.0.0

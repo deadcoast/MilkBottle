@@ -488,7 +488,7 @@ class MonitoringManager:
                 warnings.append("Elevated disk usage")
 
             return {
-                "status": "healthy" if not issues else "unhealthy",
+                "status": "unhealthy" if issues else "healthy",
                 "timestamp": datetime.now().isoformat(),
                 "uptime": self.resource_monitor.get_uptime(),
                 "system_resources": system_resources,
@@ -536,27 +536,27 @@ class MonitoringManager:
             # CPU
             cpu_percent = resources["cpu"]["percent"]
             cpu_status = (
-                "High"
-                if cpu_percent > 90
-                else "Elevated" if cpu_percent > 70 else "Normal"
+                "Normal"
+                if cpu_percent <= 70
+                else "Elevated" if cpu_percent <= 90 else "High"
             )
             table.add_row("CPU", f"{cpu_percent:.1f}%", cpu_status)
 
             # Memory
             memory_percent = resources["memory"]["percent"]
             memory_status = (
-                "High"
-                if memory_percent > 90
-                else "Elevated" if memory_percent > 80 else "Normal"
+                "Normal"
+                if memory_percent <= 80
+                else "Elevated" if memory_percent <= 90 else "High"
             )
             table.add_row("Memory", f"{memory_percent:.1f}%", memory_status)
 
             # Disk
             disk_percent = resources["disk"]["percent"]
             disk_status = (
-                "High"
-                if disk_percent > 90
-                else "Elevated" if disk_percent > 80 else "Normal"
+                "Normal"
+                if disk_percent <= 80
+                else "Elevated" if disk_percent <= 90 else "High"
             )
             table.add_row("Disk", f"{disk_percent:.1f}%", disk_status)
 

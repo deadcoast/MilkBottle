@@ -49,9 +49,7 @@ class MathProcessor:
         Returns:
             str: Markdown formatted mathematical text.
         """
-        # Use Mathpix API if available (best for math)
-        mathpix_result = self._try_mathpix_api(latex_text)
-        if mathpix_result:
+        if mathpix_result := self._try_mathpix_api(latex_text):
             return mathpix_result
 
         # Use Pandoc if available

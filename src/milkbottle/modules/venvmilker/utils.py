@@ -52,8 +52,7 @@ def find_interpreter(request: str | None = None) -> Path:
         candidates.append(request)
 
     for exe in candidates:
-        resolved = which(exe)
-        if resolved:
+        if resolved := which(exe):
             return Path(resolved)
 
     raise DetectError(

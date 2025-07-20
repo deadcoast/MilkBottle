@@ -16,6 +16,7 @@ Flow (simplified)
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -103,7 +104,7 @@ def create_venv(cfg: VenvConfig, root: Path, console: Console) -> Path:
     # If venv exists and hash matches, short‑circuit.
     meta_file = root / ".venvmilker.json"
     if python_target.exists() and meta_file.exists():
-        try:
+        with contextlib.suppress(OSError, ValueError, json.JSONDecodeError):
             meta = json.loads(meta_file.read_text())
             if meta.get("interpreter_hash") == sha256_of_file(
                 find_interpreter(cfg.python)
@@ -113,8 +114,6 @@ def create_venv(cfg: VenvConfig, root: Path, console: Console) -> Path:
                     root, "info", "Reusing existing .venv", hash_match=True
                 )
                 return python_target
-        except (OSError, ValueError, json.JSONDecodeError):  # pragma: no cover
-            pass  # ignore corrupt metadata; fall through to rebuild
         console.print("[yellow]ℹ Existing .venv hash mismatch – rebuilding…")
         _write_jsonl_log(root, "info", "Rebuilding .venv due to hash mismatch")
         shutil.rmtree(venv_dir, ignore_errors=True)

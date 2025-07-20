@@ -69,8 +69,7 @@ class Citation:
         if self.url:
             bibtex += f"  url = {{{self.url}}},\n"
 
-        bibtex = bibtex.rstrip(",\n") + "\n}"
-        return bibtex
+        return bibtex.rstrip(",\n") + "\n}"
 
     def _generate_key(self) -> str:
         """Generate a unique key for the citation."""
@@ -109,9 +108,7 @@ class Bibliography:
 
     def to_bibtex(self) -> str:
         """Convert bibliography to BibTeX format."""
-        bibtex = ""
-        for citation in self.citations:
-            bibtex += citation.to_bibtex() + "\n\n"
+        bibtex = "".join(citation.to_bibtex() + "\n\n" for citation in self.citations)
         return bibtex.strip()
 
     def to_markdown(self) -> str:
@@ -249,13 +246,11 @@ class CitationProcessor:
 
         try:
             # Get text blocks
-            text_dict = page.get_text("dict")
+            text_dict = page.get_text("dict")  # type: ignore[attr-defined]
 
             for block in text_dict.get("blocks", []):
                 if block.get("type") == 0:  # Text block
-                    text = block.get("text", "").strip()
-
-                    if text:
+                    if text := block.get("text", "").strip():
                         # Find citation patterns
                         for pattern in self.citation_patterns["in_text"]:
                             matches = re.finditer(pattern, text)
@@ -267,7 +262,7 @@ class CitationProcessor:
                                 citation = Citation(citation_text, "in_text")
                                 citation.page_number = page_num
                                 citation.context = (
-                                    text[:100] + "..." if len(text) > 100 else text
+                                    f"{text[:100]}..." if len(text) > 100 else text
                                 )
 
                                 citations.append(citation)
@@ -286,13 +281,11 @@ class CitationProcessor:
 
         try:
             # Get text blocks
-            text_dict = page.get_text("dict")
+            text_dict = page.get_text("dict")  # type: ignore[attr-defined]
 
             for block in text_dict.get("blocks", []):
                 if block.get("type") == 0:  # Text block
-                    text = block.get("text", "").strip()
-
-                    if text:
+                    if text := block.get("text", "").strip():
                         # Find footnote patterns
                         for pattern in self.citation_patterns["footnote"]:
                             matches = re.finditer(pattern, text, re.MULTILINE)
@@ -304,7 +297,7 @@ class CitationProcessor:
                                 citation = Citation(citation_text, "footnote")
                                 citation.page_number = page_num
                                 citation.context = (
-                                    text[:100] + "..." if len(text) > 100 else text
+                                    f"{text[:100]}..." if len(text) > 100 else text
                                 )
 
                                 citations.append(citation)
@@ -318,7 +311,7 @@ class CitationProcessor:
     def _is_bibliography_page(self, page: fitz.Page) -> bool:
         """Check if page contains bibliography section."""
         try:
-            text = page.get_text().lower()
+            text = page.get_text().lower()  # type: ignore[attr-defined]
 
             bibliography_keywords = [
                 "references",
@@ -330,12 +323,7 @@ class CitationProcessor:
                 "further reading",
             ]
 
-            for keyword in bibliography_keywords:
-                if keyword in text:
-                    return True
-
-            return False
-
+            return any(keyword in text for keyword in bibliography_keywords)
         except Exception as e:
             logger.error(f"Failed to check bibliography page: {e}")
             return False
@@ -346,17 +334,19 @@ class CitationProcessor:
 
         try:
             # Get text blocks
-            text_dict = page.get_text("dict")
+            text_dict = page.get_text("dict")  # type: ignore[attr-defined]
 
             for block in text_dict.get("blocks", []):
                 if block.get("type") == 0:  # Text block
                     text = block.get("text", "").strip()
 
-                    if text and len(text) > 20:  # Minimum length for bibliography entry
-                        # Check if this looks like a bibliography entry
-                        if self._looks_like_bibliography_entry(text):
-                            citation = Citation(text, "bibliography")
-                            citations.append(citation)
+                    if (
+                        text
+                        and len(text) > 20
+                        and self._looks_like_bibliography_entry(text)
+                    ):
+                        citation = Citation(text, "bibliography")
+                        citations.append(citation)
 
             return citations
 
@@ -366,13 +356,7 @@ class CitationProcessor:
 
     def _looks_like_bibliography_entry(self, text: str) -> bool:
         """Determine if text looks like a bibliography entry."""
-        # Check for author patterns
-        author_found = False
-        for pattern in self.author_patterns:
-            if re.search(pattern, text):
-                author_found = True
-                break
-
+        author_found = any(re.search(pattern, text) for pattern in self.author_patterns)
         # Check for year
         year_found = bool(re.search(r"\b(19|20)\d{2}\b", text))
 
@@ -395,29 +379,25 @@ class CitationProcessor:
 
         # Extract authors
         for pattern in self.author_patterns:
-            authors = re.findall(pattern, text)
-            if authors:
+            if authors := re.findall(pattern, text):
                 citation.authors = [author.strip() for author in authors]
                 break
 
         # Extract year
         for pattern in self.year_patterns:
-            years = re.findall(pattern, text)
-            if years:
+            if years := re.findall(pattern, text):
                 citation.year = years[0]
                 break
 
         # Extract DOI
         for pattern in self.doi_patterns:
-            dois = re.findall(pattern, text)
-            if dois:
+            if dois := re.findall(pattern, text):
                 citation.doi = dois[0]
                 break
 
         # Extract URL
         for pattern in self.url_patterns:
-            urls = re.findall(pattern, text)
-            if urls:
+            if urls := re.findall(pattern, text):
                 citation.url = urls[0]
                 break
 
@@ -431,8 +411,7 @@ class CitationProcessor:
         ]
 
         for pattern in title_patterns:
-            titles = re.findall(pattern, text)
-            if titles:
+            if titles := re.findall(pattern, text):
                 citation.title = titles[0].strip()
                 break
 
@@ -444,8 +423,7 @@ class CitationProcessor:
         ]
 
         for pattern in journal_patterns:
-            journals = re.findall(pattern, text)
-            if journals:
+            if journals := re.findall(pattern, text):
                 # Filter out likely titles
                 for journal in journals:
                     if len(journal) > 3 and not journal.lower().startswith(
@@ -521,18 +499,18 @@ class CitationProcessor:
             "total_citations": len(bibliography.citations),
             "citation_types": {},
             "pages_with_citations": len(
-                set(
+                {
                     c.page_number
                     for c in bibliography.citations
                     if c.page_number is not None
-                )
+                }
             ),
             "citations_with_authors": sum(
-                1 for c in bibliography.citations if c.authors
+                bool(c.authors) for c in bibliography.citations
             ),
-            "citations_with_years": sum(1 for c in bibliography.citations if c.year),
-            "citations_with_titles": sum(1 for c in bibliography.citations if c.title),
-            "citations_with_dois": sum(1 for c in bibliography.citations if c.doi),
+            "citations_with_years": sum(bool(c.year) for c in bibliography.citations),
+            "citations_with_titles": sum(bool(c.title) for c in bibliography.citations),
+            "citations_with_dois": sum(bool(c.doi) for c in bibliography.citations),
             "average_confidence": sum(c.confidence for c in bibliography.citations)
             / len(bibliography.citations),
         }

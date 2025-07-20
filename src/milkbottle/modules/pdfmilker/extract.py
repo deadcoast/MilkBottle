@@ -36,23 +36,20 @@ def extract_text_structured(pdf_path: Path) -> Dict[str, Any]:
         }
 
         for page_num, page in enumerate(doc, 1):
+            # Get text blocks with positioning information
+            text_blocks = page.get_text("dict")
             page_content = {
                 "page_num": page_num,
                 "text_blocks": [],
                 "tables": [],
                 "math_blocks": [],
                 "figures": [],
-                "layout": {},
+                "layout": {
+                    "width": page.rect.width,
+                    "height": page.rect.height,
+                    "rotation": page.rotation,
+                },
             }
-
-            # Get text blocks with positioning information
-            text_blocks = page.get_text("dict")
-            page_content["layout"] = {
-                "width": page.rect.width,
-                "height": page.rect.height,
-                "rotation": page.rotation,
-            }
-
             # Process text blocks for structure
             for block in text_blocks.get("blocks", []):
                 if "lines" in block:  # Text block

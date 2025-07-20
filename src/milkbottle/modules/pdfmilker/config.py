@@ -30,9 +30,7 @@ class PDFmilkerConfig:
             "MATHPIX_APP_KEY"
         )
 
-        if app_id and app_key:
-            return {"app_id": app_id, "app_key": app_key}
-        return None
+        return {"app_id": app_id, "app_key": app_key} if app_id and app_key else None
 
     def get_pandoc_path(self) -> Optional[str]:
         """Get Pandoc executable path."""
@@ -132,14 +130,13 @@ class PDFmilkerConfig:
     # Configuration validation methods
     def validate_configuration(self) -> Dict[str, bool]:
         """Validate all configuration settings."""
-        validation_results = {
+        return {
             "grobid_url": self._validate_grobid_url(),
             "mathpix_credentials": self._validate_mathpix_credentials(),
             "pandoc_path": self._validate_pandoc_path(),
             "batch_settings": self._validate_batch_settings(),
             "quality_settings": self._validate_quality_settings(),
         }
-        return validation_results
 
     def _validate_grobid_url(self) -> bool:
         """Validate Grobid URL configuration."""

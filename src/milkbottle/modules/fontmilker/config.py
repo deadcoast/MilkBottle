@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -14,13 +14,25 @@ class FontmilkerConfig:
     dry_run: bool = False
     verbose: bool = False
     output_dir: str = "fonts"
-    extract_formats: List[str] = None
+    extract_formats: List[str] = field(
+        default_factory=lambda: ["ttf", "otf", "woff", "woff2"]
+    )
     analyze_fonts: bool = True
     convert_fonts: bool = False
     optimize_fonts: bool = False
     validate_fonts: bool = True
     interactive: bool = True
     log_level: str = "info"
+
+    # Font processing options
+    supported_formats: List[str] = field(
+        default_factory=lambda: ["ttf", "otf", "woff", "woff2"]
+    )
+    output_formats: List[str] = field(default_factory=lambda: ["woff2", "woff", "ttf"])
+    optimization_level: int = 2
+    subset_text: Optional[str] = None
+    font_display: str = "swap"
+    preload_fonts: bool = True
 
     def __post_init__(self):
         if self.extract_formats is None:

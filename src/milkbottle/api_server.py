@@ -11,8 +11,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -347,7 +348,7 @@ class MilkBottleAPI:
                         warnings.append(f"Plugin warning: {plugin['name']}")
 
                 return HealthStatus(
-                    status="healthy" if not errors else "unhealthy",
+                    status="unhealthy" if errors else "healthy",
                     timestamp=datetime.now().isoformat(),
                     uptime=time.time() - self.start_time,
                     bottles_count=len(bottles),
@@ -480,6 +481,12 @@ class MilkBottleAPI:
 
                 session = enterprise.current_session
                 user = enterprise.current_user
+
+                # Add null checks for session and user
+                if session is None or user is None:
+                    raise HTTPException(
+                        status_code=500, detail="Login failed - no session created"
+                    )
 
                 return LoginResponse(
                     session_id=session.session_id,
@@ -792,15 +799,16 @@ class MilkBottleAPI:
                 raise HTTPException(status_code=500, detail=str(e))
 
         @self.app.put("/config/{bottle_name}")
-        async def update_bottle_config(bottle_name: str, config_update: ConfigUpdate):
+        async def update_bottle_config_endpoint(
+            bottle_name: str, config_update: ConfigUpdate
+        ):
             """Update bottle configuration."""
             try:
                 # Log configuration change
                 enterprise.log_file_access(f"config:{bottle_name}", "update")
 
-                result = update_bottle_config(
-                    bottle_name, config_update.config, config_update.validate_only
-                )
+                # Extract config from ConfigUpdate object
+                result = update_bottle_config_mock(bottle_name, config_update.config)
                 return {
                     "message": "Configuration updated successfully",
                     "result": result,
@@ -864,11 +872,10 @@ class MilkBottleAPI:
 
                 start_time = time.time()
                 preview_system = get_preview_system()
-                preview_result = preview_system.generate_preview(
-                    Path(request.file_path),
-                    config=request.config,
-                    include_quality_assessment=request.include_quality_assessment,
-                    include_structured_content=request.include_structured_content,
+
+                # Use the correct method signature - only takes pdf_path and output_dir
+                preview_result = preview_system.preview_pdf_extraction(
+                    Path(request.file_path)
                 )
 
                 processing_time = time.time() - start_time
@@ -992,7 +999,10 @@ class MilkBottleAPI:
 
                 start_time = time.time()
                 analytics = get_advanced_analytics()
-                result = analytics.analyze_content(request.file_path)
+
+                # Create content data from file path
+                content_data = {"file_path": request.file_path}
+                result = analytics.analyze_content(content_data)
 
                 processing_time = time.time() - start_time
 
@@ -1002,21 +1012,35 @@ class MilkBottleAPI:
                     analytics_result={
                         "quality_metrics": {
                             "overall_score": result.quality_metrics.overall_score,
-                            "text_quality": result.quality_metrics.text_quality,
-                            "structure_quality": result.quality_metrics.structure_quality,
-                            "metadata_completeness": result.quality_metrics.metadata_completeness,
+                            "text_quality": getattr(
+                                result.quality_metrics, "text_quality", 0.0
+                            ),
+                            "structure_quality": getattr(
+                                result.quality_metrics, "structure_quality", 0.0
+                            ),
+                            "metadata_completeness": getattr(
+                                result.quality_metrics, "metadata_completeness", 0.0
+                            ),
                         },
                         "classification": {
                             "document_type": result.classification.document_type,
                             "complexity_level": result.classification.complexity_level,
-                            "content_categories": result.classification.content_categories,
+                            "content_categories": getattr(
+                                result.classification, "content_categories", []
+                            ),
                             "confidence": result.classification.confidence,
                         },
                         "insights": {
                             "processing_time_prediction": result.insights.processing_time_prediction,
-                            "quality_improvement_suggestions": result.insights.quality_improvement_suggestions,
-                            "content_recommendations": result.insights.content_recommendations,
-                            "risk_assessment": result.insights.risk_assessment,
+                            "quality_improvement_suggestions": getattr(
+                                result.insights, "quality_improvement_suggestions", []
+                            ),
+                            "content_recommendations": getattr(
+                                result.insights, "content_recommendations", []
+                            ),
+                            "risk_assessment": getattr(
+                                result.insights, "risk_assessment", {}
+                            ),
                         },
                     },
                     processing_time=processing_time,
@@ -1067,7 +1091,8 @@ class MilkBottleAPI:
                 )
 
                 start_time = time.time()
-                config = run_wizard(wizard_type, request.config)
+                # run_wizard only takes wizard_type as argument
+                config = run_wizard(wizard_type)
                 processing_time = time.time() - start_time
 
                 return WizardResponse(
@@ -1112,6 +1137,10 @@ class MilkBottleAPI:
         async def upload_file(file: UploadFile = File(...)):
             """Upload a file."""
             try:
+                # Add null check for filename
+                if file.filename is None:
+                    raise HTTPException(status_code=400, detail="No filename provided")
+
                 # Log file upload
                 enterprise.log_file_access(file.filename, "upload")
 
@@ -1129,11 +1158,14 @@ class MilkBottleAPI:
                     "size": len(content),
                     "path": str(file_path),
                 }
+            except HTTPException:
+                raise
             except Exception as e:
                 logger.error(f"Upload failed: {e}")
-                enterprise.log_file_access(
-                    file.filename, "upload", success=False, error_message=str(e)
-                )
+                if file.filename:
+                    enterprise.log_file_access(
+                        file.filename, "upload", success=False, error_message=str(e)
+                    )
                 raise HTTPException(status_code=500, detail=str(e))
 
         @self.app.get("/download/{file_path:path}")
@@ -1213,34 +1245,12 @@ def start_api_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = Fal
 
 
 # Mock functions for missing dependencies
-def get_plugin_manager():
-    """Get plugin manager (mock implementation)."""
-    return Mock()
-
-
-def list_plugins():
-    """List plugins (mock implementation)."""
-    return []
-
-
-def load_plugin(plugin_name: str):
-    """Load plugin (mock implementation)."""
-    return {"status": "loaded", "plugin": plugin_name}
-
-
-def unload_plugin(plugin_name: str):
-    """Unload plugin (mock implementation)."""
-    return {"status": "unloaded", "plugin": plugin_name}
-
-
 def get_bottle_config(bottle_name: str):
     """Get bottle config (mock implementation)."""
     return {"default_config": True}
 
 
-def update_bottle_config(
-    bottle_name: str, config: Dict[str, Any], validate_only: bool = False
-):
+def update_bottle_config_mock(bottle_name: str, config: Dict[str, Any]):
     """Update bottle config (mock implementation)."""
     return {"status": "updated", "bottle": bottle_name}
 
@@ -1254,12 +1264,3 @@ def get_recent_logs(limit: int):
             "message": "Sample log entry",
         }
     ]
-
-
-from unittest.mock import Mock
-
-# Import missing dependencies
-from uuid import uuid4
-
-from fastapi import Request
-from fastapi import Request

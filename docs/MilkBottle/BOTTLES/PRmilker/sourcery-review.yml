@@ -1,0 +1,42 @@
+name: Sourcery Review CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sourcery:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Sourcery CLI
+        run: pip install --upgrade sourcery
+
+      - name: Run Sourcery review on diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # default token; ensures PR inline comments
+        run: |
+          # Review only the diff between PR HEAD and merge base (target branch)
+          sourcery review . \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --base "${{ github.event.pull_request.base.sha }}"
+
+      # Optional: auto‑commit Sourcery suggestions back to the PR branch
+      - name: Commit auto‑fixes (if any)
+        if: ${{ success() }}
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "action@github.com"
+          git add -A
+          git diff --cached --quiet && echo "No Sourcery fixes to commit." || {
+            git commit -m "style: apply Sourcery fixes";
+            git push;
+          }

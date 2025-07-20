@@ -217,9 +217,7 @@ class ImageProcessor:
                     bbox = block.get("bbox", (0, 0, 0, 0))
 
                     if text and len(text) > 10:  # Minimum caption length
-                        # Check if text matches caption patterns
-                        caption_info = self._identify_caption(text, bbox)
-                        if caption_info:
+                        if caption_info := self._identify_caption(text, bbox):
                             caption_info["page_number"] = page_num
                             captions.append(caption_info)
 
@@ -234,8 +232,7 @@ class ImageProcessor:
     ) -> Optional[Dict[str, Any]]:
         """Identify if text is a caption and extract figure number."""
         for pattern in self.caption_patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
+            if match := re.search(pattern, text, re.IGNORECASE):
                 if len(match.groups()) == 2:
                     figure_num = match.group(1)
                     caption_text = match.group(2).strip()
@@ -410,12 +407,17 @@ class ImageProcessor:
 
         stats = {
             "total_figures": len(figures),
-            "pages_with_figures": len(set(f.page_number for f in figures)),
+            "pages_with_figures": len({f.page_number for f in figures}),
             "total_file_size": sum(f.file_size or 0 for f in figures),
             "formats": {},
-            "quality_distribution": {"excellent": 0, "good": 0, "fair": 0, "poor": 0},
-            "captions_extracted": sum(1 for f in figures if f.caption),
-            "figure_numbers_assigned": sum(1 for f in figures if f.figure_number),
+            "quality_distribution": {
+                "excellent": 0,
+                "good": 0,
+                "fair": 0,
+                "poor": 0,
+            },
+            "captions_extracted": sum(bool(f.caption) for f in figures),
+            "figure_numbers_assigned": sum(bool(f.figure_number) for f in figures),
         }
 
         # Format distribution

@@ -65,7 +65,7 @@ class BottleRegistry:
 
         # Discover entry-point bottles
         entry_point_bottles = self._discover_entrypoint_bottles()
-        self._bottles.update(entry_point_bottles)
+        self._bottles |= entry_point_bottles
 
         # Discover local bottles
         local_bottles = self._discover_local_bottles()
@@ -85,10 +85,9 @@ class BottleRegistry:
                 group=ENTRY_POINT_GROUP
             ):
                 try:
-                    bottle_info = self._load_bottle_with_metadata(
+                    if bottle_info := self._load_bottle_with_metadata(
                         entry_point.module, entry_point.name
-                    )
-                    if bottle_info:
+                    ):
                         bottles[entry_point.name] = bottle_info
                 except Exception as e:
                     logger.error(
@@ -110,10 +109,9 @@ class BottleRegistry:
             if item.is_dir() and (item / "cli.py").exists():
                 try:
                     module_name = f"milkbottle.modules.{item.name}"
-                    bottle_info = self._load_bottle_with_metadata(
+                    if bottle_info := self._load_bottle_with_metadata(
                         module_name, item.name
-                    )
-                    if bottle_info:
+                    ):
                         bottles[item.name] = bottle_info
                 except Exception as e:
                     logger.error("Failed to load local bottle '%s': %s", item.name, e)
@@ -139,7 +137,7 @@ class BottleRegistry:
             if hasattr(module, "get_metadata"):
                 try:
                     metadata = module.get_metadata()
-                    bottle_info.update(metadata)
+                    bottle_info |= metadata
                     bottle_info["has_standard_interface"] = True
                 except Exception as e:
                     logger.warning("Failed to get metadata for %s: %s", bottle_name, e)
@@ -181,20 +179,18 @@ class BottleRegistry:
         for bottle_name, bottle_info in self._bottles.items():
             try:
                 # Validate configuration if standard interface is available
-                if bottle_info.get("has_standard_interface"):
-                    if hasattr(bottle_info["module"], "validate_config"):
-                        # Test with default configuration
-                        default_config = {"enabled": True}
-                        try:
-                            is_valid = bottle_info["module"].validate_config(
-                                default_config
-                            )
-                            bottle_info["config_validation"] = is_valid
-                        except Exception as e:
-                            logger.warning(
-                                "Config validation failed for %s: %s", bottle_name, e
-                            )
-                            bottle_info["config_validation"] = False
+                if bottle_info.get("has_standard_interface") and hasattr(
+                    bottle_info["module"], "validate_config"
+                ):
+                    default_config = {"enabled": True}
+                    try:
+                        is_valid = bottle_info["module"].validate_config(default_config)
+                        bottle_info["config_validation"] = is_valid
+                    except Exception as e:
+                        logger.warning(
+                            "Config validation failed for %s: %s", bottle_name, e
+                        )
+                        bottle_info["config_validation"] = False
 
                 # Check for required attributes
                 bottle_info["is_valid"] = (
@@ -246,11 +242,14 @@ class BottleRegistry:
         """
         bottles = self.discover_bottles()
 
-        for bottle_name, bottle_info in bottles.items():
-            if bottle_info.get("name", "").lower() == alias.lower():
-                return bottle_info
-
-        return None
+        return next(
+            (
+                bottle_info
+                for bottle_name, bottle_info in bottles.items()
+                if bottle_info.get("name", "").lower() == alias.lower()
+            ),
+            None,
+        )
 
     def health_check(self, alias: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -286,9 +285,9 @@ class BottleRegistry:
 
         # Determine overall status
         bottle_statuses = [info["status"] for info in results["bottles"].values()]
-        if any(status == "critical" for status in bottle_statuses):
+        if "critical" in bottle_statuses:
             results["overall_status"] = "critical"
-        elif any(status == "warning" for status in bottle_statuses):
+        elif "warning" in bottle_statuses:
             results["overall_status"] = "warning"
 
         return results
@@ -438,20 +437,15 @@ class BottleRegistry:
 
                 try:
                     module = importlib.import_module(package_name)
-                    if version_req:
-                        # Basic version check (could be enhanced with packaging library)
-                        if hasattr(module, "__version__"):
-                            module_version = module.__version__
-                            # Simple version comparison (could be improved)
-                            if module_version < version_req:
-                                version_issues.append(
-                                    f"{package_name} {module_version} < {version_req}"
-                                )
-                except ImportError:
-                    missing_deps.append(package_name)
+                    if version_req and hasattr(module, "__version__"):
+                        module_version = module.__version__
+                        # Simple version comparison (could be improved)
+                        if module_version < version_req:
+                            version_issues.append(
+                                f"{package_name} {module_version} < {version_req}"
+                            )
                 except Exception:
                     missing_deps.append(package_name)
-
             if missing_deps:
                 return {
                     "status": "critical",
@@ -500,11 +494,7 @@ class BottleRegistry:
         try:
             module = bottle_info["module"]
             if hasattr(module, "validate_config"):
-                is_valid = module.validate_config(config)
-                if is_valid:
-                    return True, []
-                else:
-                    return False, ["Configuration validation failed"]
+                return module.validate_config(config), []
             else:
                 return False, ["Bottle does not support configuration validation"]
         except Exception as e:
@@ -542,13 +532,11 @@ class BottleRegistry:
             Dictionary mapping bottle names to their capabilities
         """
         bottles = self.discover_bottles()
-        capabilities = {}
-
-        for bottle_name, bottle_info in bottles.items():
-            if bottle_info.get("has_standard_interface"):
-                capabilities[bottle_name] = bottle_info.get("capabilities", [])
-
-        return capabilities
+        return {
+            bottle_name: bottle_info.get("capabilities", [])
+            for bottle_name, bottle_info in bottles.items()
+            if bottle_info.get("has_standard_interface")
+        }
 
     def get_dependencies(self) -> Dict[str, List[str]]:
         """
@@ -558,13 +546,11 @@ class BottleRegistry:
             Dictionary mapping bottle names to their dependencies
         """
         bottles = self.discover_bottles()
-        dependencies = {}
-
-        for bottle_name, bottle_info in bottles.items():
-            if bottle_info.get("has_standard_interface"):
-                dependencies[bottle_name] = bottle_info.get("dependencies", [])
-
-        return dependencies
+        return {
+            bottle_name: bottle_info.get("dependencies", [])
+            for bottle_name, bottle_info in bottles.items()
+            if bottle_info.get("has_standard_interface")
+        }
 
     def print_status(self):
         """Print comprehensive status of all bottles."""
@@ -593,8 +579,8 @@ class BottleRegistry:
 
         # Print summary
         total_bottles = len(bottles)
-        valid_bottles = sum(1 for b in bottles if b["is_valid"])
-        standard_interfaces = sum(1 for b in bottles if b["has_standard_interface"])
+        valid_bottles = sum(bool(b["is_valid"]) for b in bottles)
+        standard_interfaces = sum(bool(b["has_standard_interface"]) for b in bottles)
 
         console.print(
             f"\n[bold]Summary:[/bold] {valid_bottles}/{total_bottles} bottles valid, {standard_interfaces} with standard interface"
