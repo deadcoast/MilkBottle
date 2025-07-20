@@ -1,5 +1,0 @@
-[console_scripts]
-milk = milkbottle.milk_bottle:run_cli
-
-[milkbottle.bottles]
-venvmilker = milkbottle.modules.venvmilker:get_cli

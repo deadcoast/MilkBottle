@@ -88,6 +88,69 @@ def _deep_update(
 
 
 # ---------------------------------------------------------------------------
+# Configuration Validation
+# ---------------------------------------------------------------------------
+
+
+def validate_config(config: Dict[str, Any]) -> bool:
+    """Validate VENVmilker configuration.
+
+    Args:
+        config: Configuration dictionary to validate
+
+    Returns:
+        True if configuration is valid, False otherwise
+    """
+    try:
+        # Check required fields
+        if "enabled" not in config:
+            return False
+
+        # Check boolean fields
+        boolean_fields = ["enabled", "snapshot", "dry_run", "interactive"]
+        for field in boolean_fields:
+            if field in config and not isinstance(config[field], bool):
+                return False
+
+        # Check string fields
+        string_fields = ["python", "template", "log_level"]
+        for field in string_fields:
+            if field in config and not isinstance(config[field], str):
+                return False
+
+        # Check array fields
+        if "install" in config:
+            if not isinstance(config["install"], list):
+                return False
+            for package in config["install"]:
+                if not isinstance(package, str):
+                    return False
+
+        # Validate Python version format
+        if "python" in config:
+            python_version = config["python"]
+            if not isinstance(python_version, str):
+                return False
+            # Basic Python version validation (e.g., "3.11", "3.12")
+            if not python_version.startswith("3."):
+                return False
+            try:
+                version_parts = python_version.split(".")
+                if len(version_parts) != 2:
+                    return False
+                major, minor = version_parts
+                if not (major == "3" and minor.isdigit() and 7 <= int(minor) <= 12):
+                    return False
+            except (ValueError, IndexError):
+                return False
+
+        return True
+
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 

@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-07-19T03:27:53.111847+00:00",
+  "python": "/Users/deadcoast/MilkBottle/.venv/bin/python",
+  "interpreter_hash": "bc33680ecaddc261d536f28a46ad3af89a246fe7503839de5dde29ce0ef89b42",
+  "config": {
+    "python": "3.11",
+    "install": [
+      "rich",
+      "typer"
+    ],
+    "snapshot": true,
+    "dry_run": false,
+    "template": null
+  }
+}

@@ -1,0 +1,21 @@
+# PDFmilker Configuration Template
+# Add this to your milkbottle.toml file
+
+[pdfmilker]
+# Enable/disable services
+enable_grobid = true
+enable_mathpix = true
+enable_pandoc = true
+enhanced_fallback = true
+
+# Service URLs and paths
+grobid_url = "http://localhost:8070"
+pandoc_path = "pandoc"
+
+# Mathpix API credentials (or use environment variables)
+# mathpix_app_id = "your_app_id"
+# mathpix_app_key = "your_app_key"
+
+# Output preferences
+output_format = "markdown"
+math_format = "latex"

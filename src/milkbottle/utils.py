@@ -32,9 +32,25 @@ def slugify(value: str) -> str:
     """
     try:
         return _slugify(value)
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         logger.error("Failed to slugify '%s': %s", value, e)
         return value
+
+
+def format_file_size(size_bytes: int) -> str:
+    """
+    Format a file size in bytes as a human-readable string.
+    Args:
+        size_bytes (int): File size in bytes.
+    Returns:
+        str: Human-readable file size.
+    """
+    size = float(size_bytes)
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+    return f"{size:.2f} PB"
 
 
 def hash_file(path: str, chunk_size: int = 65536) -> Optional[str]:
@@ -52,7 +68,7 @@ def hash_file(path: str, chunk_size: int = 65536) -> Optional[str]:
             for chunk in iter(lambda: f.read(chunk_size), b""):
                 sha256.update(chunk)
         return sha256.hexdigest()
-    except Exception as e:
+    except (OSError, IOError) as e:
         logger.error("Failed to hash file '%s': %s", path, e)
         return None
 

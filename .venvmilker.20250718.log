@@ -12,3 +12,36 @@
 {"timestamp": "2025-07-19T02:54:34.824063+00:00", "level": "info", "message": "Dry run: would install packages", "packages": ["rich", "typer"]}
 {"timestamp": "2025-07-19T02:54:34.824264+00:00", "level": "info", "message": "Dry run: would snapshot requirements"}
 {"timestamp": "2025-07-19T02:54:34.824500+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:00:11.993393+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "3.11", "install": ["rich", "typer"], "snapshot": true, "dry_run": true, "template": null}}
+{"timestamp": "2025-07-19T03:00:11.994444+00:00", "level": "info", "message": "Dry run: would create venv", "command": "/Users/deadcoast/MilkBottle/.venv/bin/python3.11 -m venv /Users/deadcoast/MilkBottle/.venv"}
+{"timestamp": "2025-07-19T03:00:11.994658+00:00", "level": "info", "message": "Dry run: would install packages", "packages": ["rich", "typer"]}
+{"timestamp": "2025-07-19T03:00:11.994860+00:00", "level": "info", "message": "Dry run: would snapshot requirements"}
+{"timestamp": "2025-07-19T03:00:11.995124+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:01:18.724465+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "3.11", "install": ["rich", "typer"], "snapshot": true, "dry_run": true, "template": null}}
+{"timestamp": "2025-07-19T03:01:18.725304+00:00", "level": "info", "message": "Dry run: would create venv", "command": "/Users/deadcoast/MilkBottle/.venv/bin/python3.11 -m venv /Users/deadcoast/MilkBottle/.venv"}
+{"timestamp": "2025-07-19T03:01:18.725546+00:00", "level": "info", "message": "Dry run: would install packages", "packages": ["rich", "typer"]}
+{"timestamp": "2025-07-19T03:01:18.725754+00:00", "level": "info", "message": "Dry run: would snapshot requirements"}
+{"timestamp": "2025-07-19T03:01:18.726008+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:07:43.663946+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "3.11", "install": ["rich", "typer"], "snapshot": true, "dry_run": true, "template": null}}
+{"timestamp": "2025-07-19T03:07:43.664823+00:00", "level": "info", "message": "Dry run: would create venv", "command": "/Users/deadcoast/MilkBottle/.venv/bin/python3.11 -m venv /Users/deadcoast/MilkBottle/.venv"}
+{"timestamp": "2025-07-19T03:07:43.665029+00:00", "level": "info", "message": "Dry run: would install packages", "packages": ["rich", "typer"]}
+{"timestamp": "2025-07-19T03:07:43.665233+00:00", "level": "info", "message": "Dry run: would snapshot requirements"}
+{"timestamp": "2025-07-19T03:07:43.665476+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:08:07.334301+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "3.11", "install": ["pytest"], "snapshot": true, "dry_run": true, "template": null}}
+{"timestamp": "2025-07-19T03:08:07.335154+00:00", "level": "info", "message": "Dry run: would create venv", "command": "/Users/deadcoast/MilkBottle/.venv/bin/python3.11 -m venv /Users/deadcoast/MilkBottle/.venv"}
+{"timestamp": "2025-07-19T03:08:07.335369+00:00", "level": "info", "message": "Dry run: would install packages", "packages": ["pytest"]}
+{"timestamp": "2025-07-19T03:08:07.335567+00:00", "level": "info", "message": "Dry run: would snapshot requirements"}
+{"timestamp": "2025-07-19T03:08:07.335788+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:27:45.221111+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "None", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}
+{"timestamp": "2025-07-19T03:27:48.046682+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "None", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}
+{"timestamp": "2025-07-19T03:27:51.777380+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "3.11", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}
+{"timestamp": "2025-07-19T03:27:51.778989+00:00", "level": "info", "message": "Creating virtualenv", "interpreter": "/Users/deadcoast/MilkBottle/.venv/bin/python3.11"}
+{"timestamp": "2025-07-19T03:27:52.661544+00:00", "level": "info", "message": "Virtualenv created successfully"}
+{"timestamp": "2025-07-19T03:27:52.662327+00:00", "level": "info", "message": "Installing packages", "packages": ["rich", "typer"]}
+{"timestamp": "2025-07-19T03:27:52.971087+00:00", "level": "info", "message": "Packages installed successfully"}
+{"timestamp": "2025-07-19T03:27:52.971303+00:00", "level": "info", "message": "Snapshotting requirements"}
+{"timestamp": "2025-07-19T03:27:53.111769+00:00", "level": "info", "message": "Requirements snapshot completed", "size": 596}
+{"timestamp": "2025-07-19T03:27:53.112285+00:00", "level": "info", "message": "Metadata written", "config": {"python": "3.11", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}
+{"timestamp": "2025-07-19T03:27:53.112626+00:00", "level": "info", "message": "VENVmilker session completed successfully"}
+{"timestamp": "2025-07-19T03:28:43.937499+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "None", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}
+{"timestamp": "2025-07-19T03:28:51.391008+00:00", "level": "info", "message": "VENVmilker session started", "config": {"python": "None", "install": ["rich", "typer"], "snapshot": true, "dry_run": false, "template": null}}

@@ -1,18 +1,29 @@
-"""PDFmilker exception hierarchy – production‑ready.
+"""PDFmilker exception hierarchy – production‑ready.
 
 All exceptions raised by this module ultimately derive from
-``PDFMilkerError``, which itself derives from MilkBottle’s shared
-``MilkBottleError`` if available, or a lightweight fallback when PDFmilker
-is used standalone.
+``PDFMilkerError``, which itself derives from MilkBottle's shared
+``MilkBottleError``.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from milkbottle.errors import MilkBottleError
+else:
+    try:
+        from milkbottle.errors import MilkBottleError
+    except ImportError:
+        # Fallback for standalone usage
+        class MilkBottleError(Exception):  # type: ignore
+            """Base exception for all MilkBottle errors."""
+
 
 # ---------------------------------------------------------------------------
-# Fallback‑aware base error
+# PDFmilker-specific errors
 # ---------------------------------------------------------------------------
-class PDFMilkerError(Exception):
+class PDFMilkerError(MilkBottleError):
     """
     Base exception for all PDFmilker errors.
     """

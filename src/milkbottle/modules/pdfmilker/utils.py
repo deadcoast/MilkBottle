@@ -8,22 +8,6 @@ from pathlib import Path
 logger = logging.getLogger("pdfmilker.utils")
 
 
-def format_file_size(size_bytes: int) -> str:
-    """
-    Format a file size in bytes as a human-readable string.
-    Args:
-        size_bytes (int): File size in bytes.
-    Returns:
-        str: Human-readable file size.
-    """
-    size = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-    return f"{size:.2f} PB"
-
-
 def is_pdf_file(path: Path) -> bool:
     """
     Check if a file is a valid PDF by extension and magic number.
