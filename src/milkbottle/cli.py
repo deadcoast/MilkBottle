@@ -18,6 +18,7 @@ from .performance.optimizer import (
 )
 from .plugin_marketplace.cli import marketplace
 from .plugin_sdk import PluginSDK
+from .registry import get_registry
 
 console = Console()
 
@@ -394,9 +395,145 @@ def cache_stats():
 
 @performance.command()
 def clear_cache():
-    """Clear the cache."""
-    cache_manager.clear()
-    console.print("✅ Cache cleared")
+    """Clear performance cache."""
+    cache_manager.clear_cache()
+    console.print("✅ Performance cache cleared")
+
+
+@cli.group()
+def bottle():
+    """Bottle management commands."""
+    pass
+
+
+@bottle.command()
+@click.argument("bottle_name")
+@click.argument("args", nargs=-1)
+def run(bottle_name: str, args: tuple):
+    """Run a specific bottle."""
+    registry = get_registry()
+    bottle = registry.get_bottle(bottle_name)
+
+    if not bottle:
+        console.print(f"❌ Bottle '{bottle_name}' not found")
+        return
+
+    try:
+        # For Click groups, we need to invoke them differently
+        import sys
+
+        original_argv = sys.argv.copy()
+
+        # Set up the command line arguments for the bottle
+        bottle_args = [bottle_name] + list(args)
+        sys.argv = [sys.argv[0]] + bottle_args
+
+        # Execute the bottle
+        bottle.main(args=bottle_args, standalone_mode=False)
+
+        # Restore original argv
+        sys.argv = original_argv
+    except Exception as e:
+        console.print(f"❌ Error running bottle '{bottle_name}': {e}")
+        # Restore original argv in case of error
+        if "original_argv" in locals():
+            sys.argv = original_argv
+
+
+@bottle.command()
+def list():
+    """List all available bottles."""
+    registry = get_registry()
+    bottles = registry.discover_bottles()
+
+    if not bottles:
+        console.print("❌ No bottles found")
+        return
+
+    table = Table(title="Available Bottles")
+    table.add_column("Name", style="cyan")
+    table.add_column("Description", style="green")
+    table.add_column("Status", style="yellow")
+
+    for name, info in bottles.items():
+        status = "✅ Active" if info.get("healthy", False) else "❌ Error"
+        description = info.get("description", "No description")
+        table.add_row(name, description, status)
+
+    console.print(table)
+
+
+@bottle.command()
+@click.argument("bottle_name")
+def info(bottle_name: str):
+    """Show information about a specific bottle."""
+    registry = get_registry()
+    metadata = registry.get_bottle_metadata(bottle_name)
+
+    if not metadata:
+        console.print(f"❌ Bottle '{bottle_name}' not found")
+        return
+
+    table = Table(title=f"Bottle: {bottle_name}")
+    table.add_column("Property", style="cyan")
+    table.add_column("Value", style="green")
+
+    for key, value in metadata.items():
+        try:
+            if value is None:
+                display_value = "None"
+            elif hasattr(value, "__iter__") and not isinstance(value, (str, bytes)):
+                display_value = ", ".join(str(v) for v in value)
+            else:
+                display_value = str(value)
+            table.add_row(key, display_value)
+        except Exception as e:
+            table.add_row(key, f"Error: {e}")
+
+    console.print(table)
+
+
+@bottle.command()
+@click.argument("bottle_name", required=False)
+def health(bottle_name: Optional[str]):
+    """Check health of bottles."""
+    registry = get_registry()
+
+    if bottle_name:
+        # Check specific bottle
+        health_info = registry.health_check(bottle_name)
+        table = Table(title=f"Health Check: {bottle_name}")
+        table.add_column("Component", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Details", style="yellow")
+
+        for component, info in health_info.items():
+            if isinstance(info, dict):
+                status = "✅ Healthy" if info.get("healthy", False) else "❌ Unhealthy"
+                details = info.get("details", "No details")
+            else:
+                status = "❌ Error"
+                details = str(info)
+            table.add_row(component, status, details)
+
+    else:
+        # Check all bottles
+        bottles = registry.discover_bottles()
+        table = Table(title="Bottle Health Status")
+        table.add_column("Bottle", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Details", style="yellow")
+
+        for name in bottles:
+            health_info = registry.health_check(name)
+            overall_healthy = all(
+                info.get("healthy", False) for info in health_info.values()
+            )
+            status = "✅ Healthy" if overall_healthy else "❌ Issues"
+            details = f"{len(health_info)} components checked"
+            table.add_row(name, status, details)
+
+    console.print(table)
 
 
 @cli.command()

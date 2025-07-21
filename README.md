@@ -1,7 +1,27 @@
 # MilkBottle 🍼 – The Fluid Code Toolbox
 
-A **modular CLI framework** that lets you plug in task‑focused "bottles" (sub‑tools) without touching core code.  
-Write once, bottle forever—whether you're batch‑extracting PDFs, organising fonts, or shipping your own milker.
+## Dual CLI System: Interactive Menu & Modular CLI
+
+MilkBottle now supports **two powerful CLI entry points**:
+
+- **`milk`** — launches the original interactive ASCII menu system (TUI), with all your custom logic, bottle menus, and guided workflows. This is the classic, user-friendly, menu-driven experience.
+- **`milk-cli`** — launches the modern modular CLI, with explicit subcommands for bottles, plugins, deployment, performance, and more. This is ideal for scripting, automation, and advanced users.
+
+**You can use both CLIs side-by-side:**
+
+- Use `milk` for interactive exploration, configuration wizards, and guided workflows.
+- Use `milk-cli` for direct scripting, automation, and advanced plugin management.
+
+### Example Usage
+
+```bash
+# Launch the interactive menu system (recommended for most users)
+milk
+
+# Use the modular CLI for scripting and automation
+milk-cli bottle list
+milk-cli bottle run pdfmilker --input file.pdf --output outdir/
+```
 
 ---
 
@@ -12,6 +32,12 @@ Write once, bottle forever—whether you're batch‑extracting PDFs, organising 
   - [Features](#features)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
+  - [Phase 5: Enterprise Features (✅ Complete)](#phase-5-enterprise-features--complete)
+    - [Plugin SDK](#plugin-sdk)
+    - [Performance Optimization](#performance-optimization)
+    - [Plugin Marketplace](#plugin-marketplace)
+    - [Deployment Management](#deployment-management)
+    - [System Status](#system-status)
   - [CLI Grammar](#cli-grammar)
   - [Built‑In Bottles](#builtin-bottles)
   - [PDFmilker Usage](#pdfmilker-usage)
@@ -28,12 +54,17 @@ Write once, bottle forever—whether you're batch‑extracting PDFs, organising 
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
     - [Debug Mode](#debug-mode)
-    - [Performance Optimization](#performance-optimization)
+    - [Performance Optimization](#performance-optimization-1)
   - [Contributing](#contributing)
     - [Development Setup](#development-setup)
   - [Task 5 — README Usage Snippet (COMPLETED)](#task5readmeusagesnippetcompleted)
     - [Hybrid Sourcery PR Workflow](#hybrid-sourcery-pr-workflow)
       - [How to use](#howto-use)
+  - [TROUBLESHOOTING](#troubleshooting-1)
+    - [1. **Identify Required Dependencies**](#1-identify-required-dependencies)
+    - [2. **Install All Required Dependencies**](#2-install-all-required-dependencies)
+    - [3. **Install System/External Tools (if needed)**](#3-install-systemexternal-tools-if-needed)
+    - [4. **Verify Installation**](#4-verify-installation)
   - [Roadmap](#roadmap)
     - [Recent Updates (Phase 4.1 \& 4.2)](#recent-updates-phase-41--42)
   - [License](#license)
@@ -355,179 +386,5 @@ pytest src/tests/pdfmilker/test_extract.py -v
 ### Bottle Structure Example
 
 ```
-src/milkbottle/modules/mybottle/
-├── __init__.py          # Metadata and exports
-├── cli.py              # CLI interface
-├── core.py             # Main logic
-├── errors.py           # Custom exceptions
-├── config.py           # Configuration handling
-├── tests/              # Test suite
-│   ├── test_core.py
-│   ├── test_cli.py
-│   └── test_integration.py
-└── README.md           # Bottle-specific documentation
-```
 
----
-
-## Troubleshooting
-
-### Common Issues
-
-**PDF Processing Errors**
-
-```bash
-# Check if PyMuPDF is properly installed
-python -c "import fitz; print('PyMuPDF OK')"
-
-# Verify system dependencies
-brew install mupdf  # macOS
-sudo apt-get install libmupdf-dev  # Ubuntu/Debian
-```
-
-**Permission Errors**
-
-```bash
-# Check file permissions
-ls -la document.pdf
-
-# Run with appropriate permissions
-sudo milk bottle PDFmilker --input /protected/directory/
-```
-
-**Memory Issues with Large PDFs**
-
-```bash
-# Use batch processing for large files
-milk bottle PDFmilker --input large_document.pdf --batch-size 1
-
-# Monitor memory usage
-milk bottle PDFmilker --input large_document.pdf --verbose
-```
-
-**Corrupted PDF Files**
-
-```bash
-# PDFmilker handles corrupted files gracefully
-# Check the meta/reports for error details
-cat output/meta/processing_report.json
-```
-
-### Debug Mode
-
-```bash
-# Enable debug logging
-milk bottle PDFmilker --input document.pdf --log-level debug
-
-# Check detailed processing logs
-tail -f ~/.milkbottle/logs/pdfmilker.log
-```
-
-### Performance Optimization
-
-```bash
-# Process multiple files in parallel
-milk bottle PDFmilker --input /path/to/pdfs/ --workers 4
-
-# Skip existing files for faster re-runs
-milk bottle PDFmilker --input /path/to/pdfs/ --skip-existing
-
-# Use dry-run to preview operations
-milk bottle PDFmilker --input /path/to/pdfs/ --dry-run
-```
-
----
-
-## Contributing
-
-1. Fork, branch, code.
-2. Ensure **Black**, **isort**, and **pytest** pass (`pytest -q`).
-3. Submit a PR with a clear description and link to a TASKLIST item if applicable.
-
-### Development Setup
-
-```bash
-# Install in development mode
-pip install -e ".[dev]"
-
-# Run linting
-black src/
-isort src/
-
-# Run tests
-pytest src/tests/ -v
-
-# Check coverage
-pytest --cov=milkbottle --cov-report=html
-```
-
-> **Suggestion:** Add a GitHub Action for lint + tests to automate checks.
-
----
-
-## Task 5 — README Usage Snippet (COMPLETED)
-
-Below is a drop‑in section you can paste into your project’s `README.md` to document the new Hybrid Sourcery Workflow.
-
----
-
-### Hybrid Sourcery PR Workflow
-
-This repository uses an **automated PR workflow** that combines a local guardrail, a one‑command PR helper, and CI enforcement.
-
-| Stage          | Tool                                    | What it does                                              |
-| -------------- | --------------------------------------- | --------------------------------------------------------- |
-| Local pre‑push | `.githooks/pre‑push`                    | Runs `sourcery review` and blocks pushes if issues found. |
-| One‑command PR | `auto_pr_to_sourcery()`                 | Pushes branch, opens PR, triggers Sourcery review.        |
-| CI enforcement | `.github/workflows/sourcery-review.yml` | Runs Sourcery in GitHub Actions for every PR update.      |
-
-#### How to use
-
-```bash
-# 1. (Optional) Verify everything is set up
-./scripts/pr_check.sh
-
-# 2. Create / switch to a feature branch and commit your changes
-
-# 3. Let Sourcery vet your code locally
-#    (automatically triggered by the pre‑push hook)
-
-git push
-
-# 4. Create and open a PR in one go
-
-auto_pr_to_sourcery
-```
-
-> **Tip:** The GitHub Action will re‑run Sourcery for every push made to your PR, ensuring continuous feedback.
-
----
-
-## Roadmap
-
-| Milestone  | Target                                 | Notes                       |
-| ---------- | -------------------------------------- | --------------------------- |
-| **v0.1.0** | Bottle registry + PDFmilker integrated | ✅ Complete                 |
-| **v0.2.0** | FONTmilker MVP                         | Adds `fontTools` dep        |
-| **v0.3.x** | Plugin SDK + cookiecutter              | Encourage community bottles |
-| **v1.0.0** | Stable API freeze                      | Semantic versioning         |
-
-### Recent Updates (Phase 4.1 & 4.2)
-
-- ✅ **Comprehensive Testing Suite**: 164+ tests with 97% coverage for core modules
-- ✅ **Advanced PDF Processing**: Structured text extraction, image processing, table detection
-- ✅ **Integration Tests**: Full pipeline workflow testing with error handling
-- ✅ **CLI Testing**: Command-line interface behavior testing
-- ✅ **Error Recovery**: Robust error handling and recovery mechanisms
-- ✅ **Performance Optimization**: Batch processing and memory management
-- ✅ **Documentation**: Comprehensive usage examples and troubleshooting guide
-
----
-
-## License
-
-MIT © 2025
-
-```
-deadcoast.net
 ```
