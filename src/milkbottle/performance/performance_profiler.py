@@ -129,17 +129,9 @@ class PerformanceProfiler:
 
             # Add CPU profiling details
             if profiler:
-                stats = pstats.Stats(profiler)
-                stats.sort_stats("cumulative")
-
-                # Get top functions by cumulative time
-                output = StringIO()
-                stats.print_stats(10)
-                profile_result.details["cpu_profile"] = "CPU profiling completed"
-
-                # Calculate CPU percentage (approximate)
-                profile_result.cpu_percent = (execution_time / time.time()) * 100
-
+                self._extracted_from_profile_function_65(
+                    profiler, profile_result, execution_time
+                )
             # Store in history
             self.profile_history.append(profile_result)
 
@@ -157,6 +149,15 @@ class PerformanceProfiler:
                 max_time=0.0,
                 details={"error": str(e)},
             )
+
+    # TODO Rename this here and in `profile_function`
+    def _extracted_from_profile_function_65(
+        self, profiler, profile_result, execution_time
+    ):
+        stats = pstats.Stats(profiler)
+        self._extracted_from_stop_profile_5(stats, profile_result)
+        # Calculate CPU percentage (approximate)
+        profile_result.cpu_percent = (execution_time / time.time()) * 100
 
     def start_profile(self, name: str) -> None:
         """Start a named profile session.
@@ -231,18 +232,20 @@ class PerformanceProfiler:
         # Add CPU profiling details
         if profile_data["profiler"]:
             stats = pstats.Stats(profile_data["profiler"])
-            stats.sort_stats("cumulative")
-
-            output = StringIO()
-            stats.print_stats(10)
-            profile_result.details["cpu_profile"] = "CPU profiling completed"
-
+            self._extracted_from_stop_profile_5(stats, profile_result)
         # Store in history and remove from active
         self.profile_history.append(profile_result)
         del self.active_profiles[name]
 
         logger.info(f"Stopped profile session {name}: {execution_time:.3f}s")
         return profile_result
+
+    # TODO Rename this here and in `_extracted_from_profile_function_65` and `stop_profile`
+    def _extracted_from_stop_profile_5(self, stats, profile_result):
+        stats.sort_stats("cumulative")
+        output = StringIO()
+        stats.print_stats(10)
+        profile_result.details["cpu_profile"] = "CPU profiling completed"
 
     def get_profile_history(self) -> List[ProfileResult]:
         """Get profiling history.
@@ -261,10 +264,14 @@ class PerformanceProfiler:
         Returns:
             Profile result or None if not found
         """
-        for profile in reversed(self.profile_history):
-            if profile.function_name == function_name:
-                return profile
-        return None
+        return next(
+            (
+                profile
+                for profile in reversed(self.profile_history)
+                if profile.function_name == function_name
+            ),
+            None,
+        )
 
     def get_slowest_functions(self, limit: int = 10) -> List[ProfileResult]:
         """Get the slowest functions by average time.
@@ -334,7 +341,7 @@ class PerformanceProfiler:
             return {"message": "No profiling data available"}
 
         # Calculate overall statistics
-        total_functions = len(set(p.function_name for p in self.profile_history))
+        total_functions = len({p.function_name for p in self.profile_history})
         total_time = sum(p.total_time for p in self.profile_history)
         total_calls = sum(p.call_count for p in self.profile_history)
 
@@ -397,30 +404,40 @@ class PerformanceProfiler:
 
         # Time-based suggestions
         if profile_result.avg_time > 1.0:
-            suggestions.append("Consider caching results for expensive operations")
-            suggestions.append("Look for opportunities to parallelize work")
-            suggestions.append("Profile individual operations within the function")
-
+            suggestions.extend(
+                (
+                    "Consider caching results for expensive operations",
+                    "Look for opportunities to parallelize work",
+                    "Profile individual operations within the function",
+                )
+            )
         if profile_result.avg_time > 0.1:
-            suggestions.append("Consider using more efficient algorithms")
-            suggestions.append("Check for unnecessary computations")
-
+            suggestions.extend(
+                (
+                    "Consider using more efficient algorithms",
+                    "Check for unnecessary computations",
+                )
+            )
         # Memory-based suggestions
         if (
             profile_result.memory_usage
             and profile_result.memory_usage > 100 * 1024 * 1024
         ):  # 100MB
-            suggestions.append(
-                "Consider streaming large data instead of loading all at once"
+            suggestions.extend(
+                (
+                    "Consider streaming large data instead of loading all at once",
+                    "Look for memory leaks or inefficient data structures",
+                    "Consider using generators for large datasets",
+                )
             )
-            suggestions.append("Look for memory leaks or inefficient data structures")
-            suggestions.append("Consider using generators for large datasets")
-
         # CPU-based suggestions
         if profile_result.cpu_percent and profile_result.cpu_percent > 80:
-            suggestions.append("Consider using multiprocessing for CPU-intensive tasks")
-            suggestions.append("Look for opportunities to use vectorized operations")
-
+            suggestions.extend(
+                (
+                    "Consider using multiprocessing for CPU-intensive tasks",
+                    "Look for opportunities to use vectorized operations",
+                )
+            )
         return {
             "profile_result": {
                 "function_name": profile_result.function_name,

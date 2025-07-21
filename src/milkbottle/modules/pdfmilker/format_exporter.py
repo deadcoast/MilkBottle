@@ -255,13 +255,17 @@ class FormatExporter:
         try:
             # Import here to avoid dependency issues
             try:
+                import importlib.util
+
                 from docx import Document
                 from docx.enum.text import WD_ALIGN_PARAGRAPH
-                from docx.shared import Inches
-            except ImportError:
+
+                if not importlib.util.find_spec("docx.shared"):
+                    raise ImportError("docx.shared module not available")
+            except ImportError as e:
                 raise ImportError(
                     "python-docx is required for Word export. Install with: pip install python-docx"
-                )
+                ) from e
 
             # Create document
             doc = Document()
@@ -333,41 +337,31 @@ class FormatExporter:
 
         # Title
         if content.get("title"):
-            lines.append(f"# {content['title']}")
-            lines.append("")
-
+            lines.extend((f"# {content['title']}", ""))
         # Abstract
         if content.get("abstract"):
-            lines.append("## Abstract")
-            lines.append("")
-            lines.append(content["abstract"])
-            lines.append("")
-
+            lines.extend(("## Abstract", "", content["abstract"], ""))
         # Body text
         if content.get("body_text"):
-            lines.append("## Content")
-            lines.append("")
-            lines.append(content["body_text"])
-            lines.append("")
-
+            lines.extend(("## Content", "", content["body_text"], ""))
         # Mathematical formulas
         if content.get("math_formulas"):
-            lines.append("## Mathematical Formulas")
-            lines.append("")
+            lines.extend(("## Mathematical Formulas", ""))
             for formula in content["math_formulas"]:
-                lines.append(f"**Formula {formula.get('number', 'N/A')}:**")
-                lines.append("```latex")
-                lines.append(formula.get("latex", formula.get("text", "")))
-                lines.append("```")
-                lines.append("")
-
+                lines.extend(
+                    (
+                        f"**Formula {formula.get('number', 'N/A')}:**",
+                        "```latex",
+                        formula.get("latex", formula.get("text", "")),
+                        "```",
+                        "",
+                    )
+                )
         # Tables
         if content.get("tables"):
-            lines.append("## Tables")
-            lines.append("")
+            lines.extend(("## Tables", ""))
             for i, table_data in enumerate(content["tables"]):
-                lines.append(f"**Table {i+1}:**")
-                lines.append("")
+                lines.extend((f"**Table {i + 1}:**", ""))
                 if isinstance(table_data, dict) and "markdown" in table_data:
                     lines.append(table_data["markdown"])
                 else:
@@ -376,10 +370,8 @@ class FormatExporter:
 
         # References
         if content.get("references"):
-            lines.append("## References")
-            lines.append("")
-            for ref in content["references"]:
-                lines.append(f"- {ref}")
+            lines.extend(("## References", ""))
+            lines.extend(f"- {ref}" for ref in content["references"])
             lines.append("")
 
         return "\n".join(lines)
@@ -418,33 +410,27 @@ class FormatExporter:
 
         # Abstract
         if content.get("abstract"):
-            html_parts.append("<h2>Abstract</h2>")
-            html_parts.append(f"<p>{content['abstract']}</p>")
-
+            html_parts.extend(("<h2>Abstract</h2>", f"<p>{content['abstract']}</p>"))
         # Body text
         if content.get("body_text"):
-            html_parts.append("<h2>Content</h2>")
-            html_parts.append(f"<p>{content['body_text']}</p>")
-
+            html_parts.extend(("<h2>Content</h2>", f"<p>{content['body_text']}</p>"))
         # Mathematical formulas
         if content.get("math_formulas"):
             html_parts.append("<h2>Mathematical Formulas</h2>")
             for formula in content["math_formulas"]:
-                html_parts.append("<div class='math'>")
-                html_parts.append(
-                    f"<strong>Formula {formula.get('number', 'N/A')}:</strong>"
+                html_parts.extend(
+                    (
+                        "<div class='math'>",
+                        f"<strong>Formula {formula.get('number', 'N/A')}:</strong>",
+                        f"<pre>{formula.get('latex', formula.get('text', ''))}</pre>",
+                        "</div>",
+                    )
                 )
-                html_parts.append(
-                    f"<pre>{formula.get('latex', formula.get('text', ''))}</pre>"
-                )
-                html_parts.append("</div>")
-
         # Tables
         if content.get("tables"):
             html_parts.append("<h2>Tables</h2>")
             for i, table_data in enumerate(content["tables"]):
-                html_parts.append("<div class='table'>")
-                html_parts.append(f"<h3>Table {i+1}</h3>")
+                html_parts.extend(("<div class='table'>", f"<h3>Table {i + 1}</h3>"))
                 if isinstance(table_data, dict) and "markdown" in table_data:
                     html_parts.append(f"<pre>{table_data['markdown']}</pre>")
                 else:
@@ -453,10 +439,10 @@ class FormatExporter:
 
         # References
         if content.get("references"):
-            html_parts.append("<h2>References</h2>")
-            html_parts.append("<ul>")
-            for ref in content["references"]:
-                html_parts.append(f"<li class='reference'>{ref}</li>")
+            html_parts.extend(("<h2>References</h2>", "<ul>"))
+            html_parts.extend(
+                f"<li class='reference'>{ref}</li>" for ref in content["references"]
+            )
             html_parts.append("</ul>")
 
         html_parts.extend(["</body>", "</html>"])
@@ -488,35 +474,28 @@ class FormatExporter:
 
         # Title
         if content.get("title"):
-            latex_parts.append(f"\\title{{{content['title']}}}")
-            latex_parts.append("\\maketitle")
-            latex_parts.append("")
-
+            latex_parts.extend((f"\\title{{{content['title']}}}", "\\maketitle", ""))
         # Abstract
         if content.get("abstract"):
-            latex_parts.append("\\begin{abstract}")
-            latex_parts.append(content["abstract"])
-            latex_parts.append("\\end{abstract}")
-            latex_parts.append("")
-
+            latex_parts.extend(
+                ("\\begin{abstract}", content["abstract"], "\\end{abstract}", "")
+            )
         # Body text
         if content.get("body_text"):
-            latex_parts.append("\\section{Content}")
-            latex_parts.append(content["body_text"])
-            latex_parts.append("")
-
+            latex_parts.extend(("\\section{Content}", content["body_text"], ""))
         # Mathematical formulas
         if content.get("math_formulas"):
             latex_parts.append("\\section{Mathematical Formulas}")
             for formula in content["math_formulas"]:
-                latex_parts.append(
-                    f"\\textbf{{Formula {formula.get('number', 'N/A')}:}}"
+                latex_parts.extend(
+                    (
+                        f"\\textbf{{Formula {formula.get('number', 'N/A')}:}}",
+                        "\\begin{align*}",
+                        formula.get("latex", formula.get("text", "")),
+                        "\\end{align*}",
+                        "",
+                    )
                 )
-                latex_parts.append("\\begin{align*}")
-                latex_parts.append(formula.get("latex", formula.get("text", "")))
-                latex_parts.append("\\end{align*}")
-                latex_parts.append("")
-
         # Tables
         if content.get("tables"):
             latex_parts.append("\\section{Tables}")
@@ -525,20 +504,16 @@ class FormatExporter:
                 if isinstance(table_data, dict) and "latex" in table_data:
                     latex_parts.append(table_data["latex"])
                 else:
-                    latex_parts.append("\\begin{verbatim}")
-                    latex_parts.append(str(table_data))
-                    latex_parts.append("\\end{verbatim}")
+                    latex_parts.extend(
+                        ("\\begin{verbatim}", str(table_data), "\\end{verbatim}")
+                    )
                 latex_parts.append("")
 
         # References
         if content.get("references"):
-            latex_parts.append("\\section{References}")
-            latex_parts.append("\\begin{enumerate}")
-            for ref in content["references"]:
-                latex_parts.append(f"\\item {ref}")
-            latex_parts.append("\\end{enumerate}")
-            latex_parts.append("")
-
+            latex_parts.extend(("\\section{References}", "\\begin{enumerate}"))
+            latex_parts.extend(f"\\item {ref}" for ref in content["references"])
+            latex_parts.extend(("\\end{enumerate}", ""))
         latex_parts.extend(["\\end{document}"])
 
         return "\n".join(latex_parts)
@@ -595,12 +570,10 @@ class FormatExporter:
         if not formulas:
             return ""
 
-        formatted = []
-        for formula in formulas:
-            formatted.append(
-                f"Formula {formula.get('number', 'N/A')}: {formula.get('latex', formula.get('text', ''))}"
-            )
-
+        formatted = [
+            f"Formula {formula.get('number', 'N/A')}: {formula.get('latex', formula.get('text', ''))}"
+            for formula in formulas
+        ]
         return "\n".join(formatted)
 
     def _format_tables(self, tables: List[Any]) -> str:
@@ -619,17 +592,14 @@ class FormatExporter:
 
     def _format_references(self, references: List[str]) -> str:
         """Format references for template substitution."""
-        if not references:
-            return ""
-
-        return "\n".join([f"- {ref}" for ref in references])
+        return "\n".join([f"- {ref}" for ref in references]) if references else ""
 
     def _count_sections(self, content: Dict[str, Any]) -> int:
         """Count the number of content sections."""
         return len(
             [
                 k
-                for k in content.keys()
+                for k in content
                 if k not in ["metadata", "pdf_path", "extraction_method"]
             ]
         )

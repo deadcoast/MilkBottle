@@ -153,26 +153,20 @@ class InteractivePreview:
 
         # Add title if available
         if structured_content.get("title"):
-            preview_parts.append(f"Title: {structured_content['title']}")
-            preview_parts.append("")
-
+            preview_parts.extend((f"Title: {structured_content['title']}", ""))
         # Add abstract if available
         if structured_content.get("abstract"):
             abstract = structured_content["abstract"]
             if len(abstract) > self.config.max_preview_size:
-                abstract = abstract[: self.config.max_preview_size] + "..."
-            preview_parts.append(f"Abstract: {abstract}")
-            preview_parts.append("")
-
+                abstract = f"{abstract[:self.config.max_preview_size]}..."
+            preview_parts.extend((f"Abstract: {abstract}", ""))
         # Add first few pages
         pages = structured_content.get("pages", [])
         for i, page in enumerate(pages[:3]):  # Show first 3 pages
             page_text = page.get("text", "")
             if len(page_text) > 200:
-                page_text = page_text[:200] + "..."
-            preview_parts.append(f"Page {i+1}: {page_text}")
-            preview_parts.append("")
-
+                page_text = f"{page_text[:200]}..."
+            preview_parts.extend((f"Page {i + 1}: {page_text}", ""))
         # Add summary of other content
         if structured_content.get("tables"):
             preview_parts.append(f"Tables: {len(structured_content['tables'])} found")
@@ -222,53 +216,20 @@ class InteractivePreview:
 
         # Create metadata table
         if self.config.show_metadata:
-            metadata_table = Table(title="File Metadata")
-            metadata_table.add_column("Property", style="cyan")
-            metadata_table.add_column("Value", style="white")
-
+            metadata_table = self._extracted_from_display_preview_13(
+                "File Metadata", "Property", "Value", "white"
+            )
             for key, value in result.metadata.items():
                 metadata_table.add_row(key, str(value))
 
         # Create structure table
         if self.config.show_structure:
-            structure_table = Table(title="Content Structure")
-            structure_table.add_column("Component", style="cyan")
-            structure_table.add_column("Status", style="green")
-            structure_table.add_column("Count", style="yellow")
-
-            structure = result.structure
-            structure_table.add_row("Pages", "✅", str(structure.get("total_pages", 0)))
-            structure_table.add_row(
-                "Title",
-                "✅" if structure.get("has_title") else "❌",
-                "1" if structure.get("has_title") else "0",
-            )
-            structure_table.add_row(
-                "Abstract",
-                "✅" if structure.get("has_abstract") else "❌",
-                "1" if structure.get("has_abstract") else "0",
-            )
-            structure_table.add_row(
-                "Tables",
-                "✅" if structure.get("has_tables") else "❌",
-                "Multiple" if structure.get("has_tables") else "0",
-            )
-            structure_table.add_row(
-                "Images",
-                "✅" if structure.get("has_images") else "❌",
-                "Multiple" if structure.get("has_images") else "0",
-            )
-            structure_table.add_row(
-                "Math Formulas",
-                "✅" if structure.get("has_math") else "❌",
-                "Multiple" if structure.get("has_math") else "0",
-            )
-
+            structure_table = self._extracted_from_display_preview_22(result)
         # Create quality metrics table
         if self.config.show_quality_metrics:
-            quality_table = Table(title="Quality Assessment")
-            quality_table.add_column("Metric", style="cyan")
-            quality_table.add_column("Score", style="green")
+            quality_table = self._extracted_from_display_preview_13(
+                "Quality Assessment", "Metric", "Score", "green"
+            )
             quality_table.add_column("Status", style="yellow")
 
             metrics = result.quality_metrics
@@ -319,6 +280,51 @@ class InteractivePreview:
         if result.errors:
             console.print(errors_panel)
             console.print()
+
+    # TODO Rename this here and in `display_preview`
+    def _extracted_from_display_preview_22(self, result):
+        result = self._extracted_from_display_preview_13(
+            "Content Structure", "Component", "Status", "green"
+        )
+        result.add_column("Count", style="yellow")
+
+        structure = result.structure
+        result.add_row("Pages", "✅", str(structure.get("total_pages", 0)))
+        result.add_row(
+            "Title",
+            "✅" if structure.get("has_title") else "❌",
+            "1" if structure.get("has_title") else "0",
+        )
+        result.add_row(
+            "Abstract",
+            "✅" if structure.get("has_abstract") else "❌",
+            "1" if structure.get("has_abstract") else "0",
+        )
+        result.add_row(
+            "Tables",
+            "✅" if structure.get("has_tables") else "❌",
+            "Multiple" if structure.get("has_tables") else "0",
+        )
+        result.add_row(
+            "Images",
+            "✅" if structure.get("has_images") else "❌",
+            "Multiple" if structure.get("has_images") else "0",
+        )
+        result.add_row(
+            "Math Formulas",
+            "✅" if structure.get("has_math") else "❌",
+            "Multiple" if structure.get("has_math") else "0",
+        )
+
+        return result
+
+    # TODO Rename this here and in `display_preview`
+    def _extracted_from_display_preview_13(self, title, arg1, arg2, style):
+        result = Table(title=title)
+        result.add_column(arg1, style="cyan")
+        result.add_column(arg2, style=style)
+
+        return result
 
     def interactive_preview_workflow(self, file_path: Path) -> bool:
         """Run interactive preview workflow."""

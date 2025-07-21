@@ -72,9 +72,6 @@ class {{ class_name }}(PluginInterface):
 
     async def shutdown(self) -> None:
         """Shutdown the plugin."""
-        if self.server:
-            # Stop server logic here
-            pass
         self.initialized = False
 
     def get_capabilities(self) -> List[str]:

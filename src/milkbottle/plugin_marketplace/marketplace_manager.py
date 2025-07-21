@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -108,13 +109,10 @@ class MarketplaceManager:
             # Check cache first
             cache_file = self.cache_dir / f"{plugin_name}_details.json"
             if cache_file.exists():
-                try:
+                with contextlib.suppress(Exception):
                     with open(cache_file, "r") as f:
                         data = json.load(f)
                         return PluginListing(**data)
-                except Exception:
-                    pass
-
             # Fetch from marketplace
             plugin_url = urljoin(self.config.marketplace_url, f"plugins/{plugin_name}")
 
@@ -297,13 +295,10 @@ class MarketplaceManager:
             # Check cache first
             cache_file = self.cache_dir / "plugin_listings.json"
             if cache_file.exists():
-                try:
+                with contextlib.suppress(Exception):
                     with open(cache_file, "r") as f:
                         data = json.load(f)
                         return [PluginListing(**plugin_data) for plugin_data in data]
-                except Exception:
-                    pass
-
             # Fetch from marketplace
             listings_url = urljoin(self.config.marketplace_url, "plugins")
 
@@ -429,16 +424,12 @@ class MarketplaceManager:
                     with open(plugin_file, "wb") as f:
                         f.write(await response.read())
 
-                    # Verify download
                     if await self._verify_plugin_download(plugin_file, plugin):
                         return True
-                    else:
-                        plugin_file.unlink(missing_ok=True)
-                        return False
+                    plugin_file.unlink(missing_ok=True)
                 else:
                     self.logger.error(f"Failed to download plugin: {response.status}")
-                    return False
-
+                return False
         except Exception as e:
             self.logger.error(f"Failed to download plugin: {e}")
             return False
@@ -449,14 +440,7 @@ class MarketplaceManager:
         """Verify downloaded plugin file."""
         try:
             # Check file size
-            if plugin_file.stat().st_size == 0:
-                return False
-
-            # Check file hash if available
-            # This would require the marketplace to provide file hashes
-
-            return True
-
+            return plugin_file.stat().st_size != 0
         except Exception as e:
             self.logger.error(f"Failed to verify plugin download: {e}")
             return False

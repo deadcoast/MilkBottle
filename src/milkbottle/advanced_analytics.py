@@ -195,20 +195,18 @@ class AdvancedAnalytics:
             words = all_text.split()
             sentences = all_text.split(".")
 
-            features.update(
-                {
-                    "word_count": len(words),
-                    "sentence_count": len([s for s in sentences if s.strip()]),
-                    "avg_sentence_length": len(words)
-                    / max(len([s for s in sentences if s.strip()]), 1),
-                    "avg_word_length": (
-                        np.mean([len(word) for word in words]) if words else 0
-                    ),
-                    "unique_words": len(set(words)),
-                    "vocabulary_richness": len(set(words)) / max(len(words), 1),
-                    "text_length": len(all_text),
-                }
-            )
+            features |= {
+                "word_count": len(words),
+                "sentence_count": len([s for s in sentences if s.strip()]),
+                "avg_sentence_length": len(words)
+                / max(len([s for s in sentences if s.strip()]), 1),
+                "avg_word_length": (
+                    np.mean([len(word) for word in words]) if words else 0
+                ),
+                "unique_words": len(set(words)),
+                "vocabulary_richness": len(set(words)) / max(len(words), 1),
+                "text_length": len(all_text),
+            }
 
         return features
 
@@ -216,9 +214,7 @@ class AdvancedAnalytics:
         self, content_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Extract structural features."""
-        features = {}
-
-        features.update(
+        return dict(
             {
                 "has_title": bool(content_data.get("title")),
                 "has_abstract": bool(content_data.get("abstract")),
@@ -231,8 +227,6 @@ class AdvancedAnalytics:
                 "has_bibliography": bool(content_data.get("bibliography")),
             }
         )
-
-        return features
 
     def _extract_semantic_features(
         self, content_data: Dict[str, Any]
@@ -268,21 +262,19 @@ class AdvancedAnalytics:
             "organization",
         ]
 
-        features.update(
-            {
-                "academic_score": sum(
-                    word in title or word in abstract for word in academic_keywords
-                ),
-                "technical_score": sum(
-                    word in title or word in abstract for word in technical_keywords
-                ),
-                "business_score": sum(
-                    word in title or word in abstract for word in business_keywords
-                ),
-                "has_abstract": bool(abstract),
-                "title_length": len(title.split()),
-            }
-        )
+        features |= {
+            "academic_score": sum(
+                word in title or word in abstract for word in academic_keywords
+            ),
+            "technical_score": sum(
+                word in title or word in abstract for word in technical_keywords
+            ),
+            "business_score": sum(
+                word in title or word in abstract for word in business_keywords
+            ),
+            "has_abstract": bool(abstract),
+            "title_length": len(title.split()),
+        }
 
         return features
 
@@ -292,31 +284,25 @@ class AdvancedAnalytics:
         """Extract statistical features."""
         features = {}
 
-        # Content distribution
-        pages = content_data.get("pages", [])
-        if pages:
+        if pages := content_data.get("pages", []):
             page_lengths = [len(page.get("text", "")) for page in pages]
-            features.update(
-                {
-                    "avg_page_length": np.mean(page_lengths),
-                    "page_length_std": np.std(page_lengths),
-                    "page_length_variance": np.var(page_lengths),
-                    "max_page_length": max(page_lengths),
-                    "min_page_length": min(page_lengths),
-                }
-            )
+            features |= {
+                "avg_page_length": np.mean(page_lengths),
+                "page_length_std": np.std(page_lengths),
+                "page_length_variance": np.var(page_lengths),
+                "max_page_length": max(page_lengths),
+                "min_page_length": min(page_lengths),
+            }
 
         # Metadata statistics
-        features.update(
-            {
-                "metadata_completeness": len([k for k, v in content_data.items() if v])
-                / max(len(content_data), 1),
-                "file_size": content_data.get("metadata", {}).get("file_size", 0),
-                "extraction_time": content_data.get("metadata", {}).get(
-                    "extraction_time", 0
-                ),
-            }
-        )
+        features |= {
+            "metadata_completeness": len([k for k, v in content_data.items() if v])
+            / max(len(content_data), 1),
+            "file_size": content_data.get("metadata", {}).get("file_size", 0),
+            "extraction_time": content_data.get("metadata", {}).get(
+                "extraction_time", 0
+            ),
+        }
 
         return features
 

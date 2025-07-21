@@ -58,16 +58,13 @@ class PluginSDK:
         try:
             output_dir = output_dir or Path.cwd() / name
 
-            # Generate plugin structure
-            success = self.generator.generate_plugin(
+            if success := self.generator.generate_plugin(
                 name=name,
                 template=template,
                 output_dir=output_dir,
                 template_manager=self.template_manager,
                 **kwargs,
-            )
-
-            if success:
+            ):
                 logger.info(f"Successfully created plugin: {name}")
                 return True
             else:
@@ -176,11 +173,7 @@ class PluginSDK:
                 return False
 
             # Package plugin
-            if build_type == "production":
-                return self.package_plugin(plugin_path)
-
-            return True
-
+            return self.package_plugin(plugin_path) if build_type == "production" else True
         except Exception as e:
             logger.error(f"Build failed: {e}")
             return False

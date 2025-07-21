@@ -139,7 +139,7 @@ class TestPDFmilkerIntegration:
                 # Verify file was created and has content
                 assert output_path.exists()
                 file_content = output_path.read_text(encoding="utf-8")
-                assert len(file_content) > 0
+                assert file_content != ""
 
                 # Format-specific checks
                 if format_type == "markdown":
@@ -158,7 +158,7 @@ class TestPDFmilkerIntegration:
         """Test batch processing integration."""
         # Create test PDF files
         test_files = []
-        for i in range(3):
+        for _ in range(3):
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
                 test_files.append(Path(f.name))
 

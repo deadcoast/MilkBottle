@@ -24,7 +24,7 @@ def hello(name: str, repeat: int):
 
     greeting = plugin_instance.say_hello(name)
 
-    for i in range(repeat):
+    for _ in range(repeat):
         panel = Panel(greeting, title="Hello World Plugin", border_style="green")
         console.print(panel)
 

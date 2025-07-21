@@ -381,29 +381,9 @@ def display_profiling_results(results: List[Dict[str, Any]]):
     console.print("\n[bold blue]Profiling Results[/bold blue]")
 
     if len(results) == 1:
-        result = results[0]
-        profile_table = Table(title="Function Profile")
-        profile_table.add_column("Metric", style="cyan")
-        profile_table.add_column("Value", style="green")
-
-        profile_table.add_row("Function", result.get("function_name", "Unknown"))
-        profile_table.add_row("Execution Time", f"{result.get('total_time', 0):.3f}s")
-        profile_table.add_row("Memory Usage", f"{result.get('memory_usage', 0):.2f}MB")
-        profile_table.add_row("CPU Usage", f"{result.get('cpu_percent', 0):.1f}%")
-
-        console.print(profile_table)
-
-        # Display suggestions if available
-        if "suggestions" in result:
-            console.print("\n[bold yellow]Optimization Suggestions:[/bold yellow]")
-            for suggestion in result["suggestions"]:
-                console.print(f"  • {suggestion}")
+        _extracted_from_display_profiling_results_6(results)
     else:
-        # Multiple iterations
-        summary_table = Table(title="Profiling Summary")
-        summary_table.add_column("Metric", style="cyan")
-        summary_table.add_column("Value", style="green")
-
+        summary_table = _extracted_from_display_profiling_results_7("Profiling Summary")
         times = [r.get("total_time", 0) for r in results]
         memories = [r.get("memory_usage", 0) for r in results]
 
@@ -416,6 +396,33 @@ def display_profiling_results(results: List[Dict[str, Any]]):
         )
 
         console.print(summary_table)
+
+
+# TODO Rename this here and in `display_profiling_results`
+def _extracted_from_display_profiling_results_6(results):
+    result = results[0]
+    profile_table = _extracted_from_display_profiling_results_7("Function Profile")
+    profile_table.add_row("Function", result.get("function_name", "Unknown"))
+    profile_table.add_row("Execution Time", f"{result.get('total_time', 0):.3f}s")
+    profile_table.add_row("Memory Usage", f"{result.get('memory_usage', 0):.2f}MB")
+    profile_table.add_row("CPU Usage", f"{result.get('cpu_percent', 0):.1f}%")
+
+    console.print(profile_table)
+
+    # Display suggestions if available
+    if "suggestions" in result:
+        console.print("\n[bold yellow]Optimization Suggestions:[/bold yellow]")
+        for suggestion in result["suggestions"]:
+            console.print(f"  • {suggestion}")
+
+
+# TODO Rename this here and in `display_profiling_results`
+def _extracted_from_display_profiling_results_7(title):
+    result = Table(title=title)
+    result.add_column("Metric", style="cyan")
+    result.add_column("Value", style="green")
+
+    return result
 
 
 def display_parallel_results(results: List[Any]):
@@ -437,7 +444,7 @@ def display_parallel_results(results: List[Any]):
 
     # Summary
     total = len(results)
-    successful = sum(bool(r is not None) for r in results)
+    successful = sum(r is not None for r in results)
     failed = total - successful
 
     console.print(

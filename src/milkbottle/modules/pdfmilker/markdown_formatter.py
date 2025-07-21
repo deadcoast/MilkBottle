@@ -94,9 +94,7 @@ class MarkdownFormatter:
                 # Skip the lines that were processed in the algorithm block
                 i = self._find_algorithm_end(lines, i)
             else:
-                # Process different content types
-                processed_line = self._process_line(line, lines, i)
-                if processed_line:
+                if processed_line := self._process_line(line, lines, i):
                     formatted_lines.append(processed_line)
                 i += 1
 
@@ -111,14 +109,12 @@ class MarkdownFormatter:
 
             # Stop conditions for algorithm blocks
             if not line:
-                # Empty line - check if next few lines are still algorithm content
-                if i + 1 < len(lines) and self._looks_like_algorithm_content(
+                if i + 1 >= len(lines) or not self._looks_like_algorithm_content(
                     lines[i + 1]
                 ):
-                    i += 1
-                    continue
-                else:
                     break
+                i += 1
+                continue
             elif (
                 self._looks_like_algorithm_content(line)
                 or self._is_algorithm_continuation(line)
@@ -149,9 +145,7 @@ class MarkdownFormatter:
         """
         # Check for algorithm blocks first
         if self._is_algorithm_start(line):
-            algorithm_block = self._format_algorithm_block(lines, index)
-            return algorithm_block
-
+            return self._format_algorithm_block(lines, index)
         # Check for headings
         if self._is_heading(line):
             return self._format_heading(line)
@@ -200,13 +194,7 @@ class MarkdownFormatter:
 
     def _format_algorithm_block(self, lines: List[str], start_index: int) -> str:
         """Format an algorithm block as a code block."""
-        algorithm_lines = []
-
-        # Start code block
-        algorithm_lines.append("```")
-
-        # Add algorithm header
-        algorithm_lines.append(lines[start_index].strip())
+        algorithm_lines = ["```", lines[start_index].strip()]
 
         # Collect ALL algorithm content as raw text (no processing at all)
         i = start_index + 1
@@ -230,12 +218,11 @@ class MarkdownFormatter:
             ):
                 # Add raw line without any processing
                 algorithm_lines.append(line)
-            else:
-                # Check if this might be the end of the algorithm
-                if re.match(r"^\d+\.\s+[A-Z]", line) or re.match(
+            elif re.match(r"^\d+\.\s+[A-Z]", line) or re.match(
                     r"^[A-Z][A-Z\s]{3,}$", line
                 ):
-                    break
+                break
+            else:
                 # If it doesn't look like algorithm content but we're still in the algorithm, include it as raw text
                 algorithm_lines.append(line)
 
@@ -285,11 +272,10 @@ class MarkdownFormatter:
             r"^MERGEPOLICY",
         ]
 
-        for pattern in algorithm_patterns:
-            if re.match(pattern, line, re.IGNORECASE):
-                return True
-
-        return False
+        return any(
+            re.match(pattern, line, re.IGNORECASE)
+            for pattern in algorithm_patterns
+        )
 
     def _is_algorithm_continuation(self, line: str) -> bool:
         """Check if line is a continuation of algorithm content."""
@@ -310,11 +296,7 @@ class MarkdownFormatter:
             r"^\s*\d+:",  # Indented line numbers
         ]
 
-        for pattern in continuation_patterns:
-            if re.match(pattern, line):
-                return True
-
-        return False
+        return any(re.match(pattern, line) for pattern in continuation_patterns)
 
     def _is_algorithm_text(self, line: str) -> bool:
         """Check if line is algorithm text that should be included in the code block."""
@@ -342,11 +324,10 @@ class MarkdownFormatter:
             r"^return Sorted array",
         ]
 
-        for pattern in algorithm_text_patterns:
-            if re.match(pattern, line, re.IGNORECASE):
-                return True
-
-        return False
+        return any(
+            re.match(pattern, line, re.IGNORECASE)
+            for pattern in algorithm_text_patterns
+        )
 
     def _is_algorithm_any_content(self, line: str) -> bool:
         """Check if line is any kind of algorithm content that should be included."""
@@ -360,18 +341,13 @@ class MarkdownFormatter:
             return False
         if re.match(r"^Figure \d+", line, re.IGNORECASE):  # Figure captions
             return False
-        if re.match(r"^Table \d+", line, re.IGNORECASE):  # Table captions
-            return False
-
-        # Include everything else as potential algorithm content
-        return True
+        return not re.match(r"^Table \d+", line, re.IGNORECASE)
 
     def _is_heading(self, line: str) -> bool:
         """Check if line is a heading."""
-        for pattern in self.compiled_patterns["heading"]:
-            if pattern.match(line):
-                return True
-        return False
+        return any(
+            pattern.match(line) for pattern in self.compiled_patterns["heading"]
+        )
 
     def _format_heading(self, line: str) -> str:
         """Format a heading."""
@@ -387,10 +363,9 @@ class MarkdownFormatter:
 
     def _is_list_item(self, line: str) -> bool:
         """Check if line is a list item."""
-        for pattern in self.compiled_patterns["list_item"]:
-            if pattern.match(line):
-                return True
-        return False
+        return any(
+            pattern.match(line) for pattern in self.compiled_patterns["list_item"]
+        )
 
     def _format_list_item(self, line: str) -> str:
         """Format a list item."""
@@ -398,10 +373,9 @@ class MarkdownFormatter:
 
     def _is_code_block(self, line: str) -> bool:
         """Check if line is a code block."""
-        for pattern in self.compiled_patterns["code_block"]:
-            if pattern.match(line):
-                return True
-        return False
+        return any(
+            pattern.match(line) for pattern in self.compiled_patterns["code_block"]
+        )
 
     def _format_code_block(self, line: str) -> str:
         """Format a code block."""
@@ -409,10 +383,9 @@ class MarkdownFormatter:
 
     def _has_emphasis(self, line: str) -> bool:
         """Check if line has emphasis."""
-        for pattern in self.compiled_patterns["emphasis"]:
-            if pattern.search(line):
-                return True
-        return False
+        return any(
+            pattern.search(line) for pattern in self.compiled_patterns["emphasis"]
+        )
 
     def _format_emphasis(self, line: str) -> str:
         """Format emphasis."""
@@ -420,10 +393,10 @@ class MarkdownFormatter:
 
     def _is_abstract(self, line: str) -> bool:
         """Check if line is an abstract."""
-        for pattern in self.compiled_patterns["abstract"]:
-            if pattern.match(line, re.IGNORECASE):
-                return True
-        return False
+        return any(
+            pattern.match(line, re.IGNORECASE)
+            for pattern in self.compiled_patterns["abstract"]
+        )
 
     def _format_abstract(self, line: str, lines: List[str], index: int) -> str:
         """Format an abstract section."""
@@ -441,10 +414,10 @@ class MarkdownFormatter:
 
     def _is_figure_caption(self, line: str) -> bool:
         """Check if line is a figure caption."""
-        for pattern in self.compiled_patterns["figure_caption"]:
-            if pattern.match(line, re.IGNORECASE):
-                return True
-        return False
+        return any(
+            pattern.match(line, re.IGNORECASE)
+            for pattern in self.compiled_patterns["figure_caption"]
+        )
 
     def _format_figure_caption(self, line: str) -> str:
         """Format a figure caption."""
@@ -452,10 +425,10 @@ class MarkdownFormatter:
 
     def _is_table_caption(self, line: str) -> bool:
         """Check if line is a table caption."""
-        for pattern in self.compiled_patterns["table_caption"]:
-            if pattern.match(line, re.IGNORECASE):
-                return True
-        return False
+        return any(
+            pattern.match(line, re.IGNORECASE)
+            for pattern in self.compiled_patterns["table_caption"]
+        )
 
     def _format_table_caption(self, line: str) -> str:
         """Format a table caption."""
@@ -463,10 +436,9 @@ class MarkdownFormatter:
 
     def _is_reference(self, line: str) -> bool:
         """Check if line is a reference."""
-        for pattern in self.compiled_patterns["reference"]:
-            if pattern.match(line):
-                return True
-        return False
+        return any(
+            pattern.match(line) for pattern in self.compiled_patterns["reference"]
+        )
 
     def _format_reference(self, line: str) -> str:
         """Format a reference."""
@@ -474,9 +446,7 @@ class MarkdownFormatter:
 
     def _format_regular_text(self, line: str) -> str:
         """Format regular text with inline math detection."""
-        # Apply inline math formatting
-        line = self._format_inline_math(line)
-        return line
+        return self._format_inline_math(line)
 
     def _format_inline_math(self, text: str) -> str:
         """Format inline mathematical expressions in text - FIXED: Better detection."""
@@ -502,17 +472,14 @@ class MarkdownFormatter:
                 start, end = match.span()
                 math_expr = match.group()
 
-                # Skip if already wrapped in math delimiters
-                if (
-                    start > 0
-                    and text[start - 1] == "$"
-                    and end < len(text)
-                    and text[end] == "$"
-                ):
-                    continue
+                if start > 0:
+                    if (
+                        text[start - 1] == "$"
+                        and end < len(text)
+                        and text[end] == "$"
+                    ):
+                        continue
 
-                # Skip if it's part of a larger mathematical expression
-                if start > 0 and end < len(text):
                     # Check if it's part of a larger math block
                     prev_char = text[start - 1]
                     next_char = text[end]
@@ -520,7 +487,7 @@ class MarkdownFormatter:
                         continue
 
                 # Wrap in inline math delimiters
-                text = text[:start] + f"${math_expr}$" + text[end:]
+                text = f"{text[:start]}${math_expr}${text[end:]}"
 
         return text
 
@@ -619,9 +586,7 @@ class MarkdownFormatter:
         for figure in figures:
             formatted_sections.append(f"\n**{figure['caption']}**")
 
-        # Add references section
-        references = structured_content.get("references", [])
-        if references:
+        if references := structured_content.get("references", []):
             formatted_sections.append("\n## References")
             for ref in references:
                 formatted_sections.append(ref["text"])
@@ -640,14 +605,11 @@ class MarkdownFormatter:
         header = "| " + " | ".join(str(cell) for cell in data[0]) + " |"
         separator = "| " + " | ".join("---" for _ in data[0]) + " |"
 
-        md_lines.append(header)
-        md_lines.append(separator)
-
+        md_lines.extend((header, separator))
         # Add data rows
-        for row in data[1:]:
-            row_str = "| " + " | ".join(str(cell) for cell in row) + " |"
-            md_lines.append(row_str)
-
+        md_lines.extend(
+            "| " + " | ".join(str(cell) for cell in row) + " |" for row in data[1:]
+        )
         return md_lines
 
     def _is_pure_math_content(self, text: str) -> bool:

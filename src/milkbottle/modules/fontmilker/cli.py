@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import shutil
 import subprocess
 from pathlib import Path
@@ -79,7 +80,7 @@ def extract(path: Path, output_dir: str, formats: tuple):
 
 def _extract_fonts_from_pdf(pdf_path: Path, output_path: Path, formats: tuple) -> int:
     """Extract fonts from PDF using pdftk or similar tools."""
-    try:
+    with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
         # Try using pdftk to extract fonts
         result = subprocess.run(
             ["pdftk", str(pdf_path), "dump_data_fields"],
@@ -89,28 +90,15 @@ def _extract_fonts_from_pdf(pdf_path: Path, output_path: Path, formats: tuple) -
         )
 
         if result.returncode == 0:
-            # Parse font information from output
-            font_count = 0
-            for line in result.stdout.split("\n"):
-                if "FontName" in line:
-                    font_count += 1
-            return font_count
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-
+            return sum("FontName" in line for line in result.stdout.split("\n"))
     # Fallback: try using pdfinfo
-    try:
+    with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
         result = subprocess.run(
             ["pdfinfo", str(pdf_path)], capture_output=True, text=True, timeout=30
         )
 
         if result.returncode == 0:
-            # Count font references
-            font_count = result.stdout.count("Font")
-            return font_count
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-
+            return result.stdout.count("Font")
     return 0
 
 
@@ -118,7 +106,7 @@ def _extract_fonts_from_office(
     file_path: Path, output_path: Path, formats: tuple
 ) -> int:
     """Extract fonts from Office documents."""
-    try:
+    with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
         # For Office documents, we can try to extract embedded fonts
         # This is a simplified implementation
         temp_dir = output_path / f"temp_{file_path.stem}"
@@ -145,9 +133,6 @@ def _extract_fonts_from_office(
                 # Clean up
                 shutil.rmtree(temp_dir)
                 return len(font_files)
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-
     return 0
 
 
@@ -187,7 +172,7 @@ def _get_font_info(font_path: Path) -> dict:
     info = {}
 
     # Try using fc-query (fontconfig)
-    try:
+    with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
         result = subprocess.run(
             ["fc-query", str(font_path)], capture_output=True, text=True, timeout=30
         )
@@ -197,12 +182,9 @@ def _get_font_info(font_path: Path) -> dict:
                 if ":" in line:
                     key, value = line.split(":", 1)
                     info[key.strip()] = value.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-
     # Try using otfinfo for OpenType fonts
     if font_path.suffix.lower() in [".otf", ".ttf"]:
-        try:
+        with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
             result = subprocess.run(
                 ["otfinfo", str(font_path)], capture_output=True, text=True, timeout=30
             )
@@ -212,9 +194,6 @@ def _get_font_info(font_path: Path) -> dict:
                     if ":" in line:
                         key, value = line.split(":", 1)
                         info[f"OTF_{key.strip()}"] = value.strip()
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-
     return info
 
 
@@ -233,17 +212,14 @@ def convert(input_path: Path, output_path: Path, format: str):
         # Create output directory if needed
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Use fontforge for conversion if available
-        success = _convert_with_fontforge(input_path, output_path, format)
-
-        if not success:
-            # Fallback: try using other tools
-            success = _convert_with_other_tools(input_path, output_path, format)
-
-        if success:
+        if success := _convert_with_fontforge(
+            input_path, output_path, format
+        ) or _convert_with_other_tools(input_path, output_path, format):
             console.print(f"[green]Successfully converted font to {format}[/green]")
+            console.print(f"Output saved to: {output_path}")
         else:
             console.print("[red]Font conversion failed[/red]")
+            console.print("Tried both FontForge and alternative tools")
 
     except Exception as e:
         console.print(f"[red]Error during conversion: {e}[/red]")
@@ -275,7 +251,7 @@ def _convert_with_other_tools(input_path: Path, output_path: Path, format: str) 
     """Convert font using other available tools."""
     # Try using ttf2eot for TTF to EOT conversion
     if format.lower() == "eot" and input_path.suffix.lower() == ".ttf":
-        try:
+        with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
             result = subprocess.run(
                 ["ttf2eot", str(input_path)], capture_output=True, timeout=60
             )
@@ -284,12 +260,9 @@ def _convert_with_other_tools(input_path: Path, output_path: Path, format: str) 
                 with open(output_path, "wb") as f:
                     f.write(result.stdout)
                 return True
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-
     # Try using woff2_compress for WOFF2 conversion
     if format.lower() == "woff2":
-        try:
+        with contextlib.suppress(subprocess.TimeoutExpired, FileNotFoundError):
             result = subprocess.run(
                 ["woff2_compress", str(input_path)], capture_output=True, timeout=60
             )
@@ -299,9 +272,6 @@ def _convert_with_other_tools(input_path: Path, output_path: Path, format: str) 
                 if woff2_path.exists():
                     shutil.move(woff2_path, output_path)
                     return True
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-
     return False
 
 

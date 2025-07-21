@@ -108,10 +108,6 @@ def extract_text_structured(pdf_path: Path) -> Dict[str, Any]:
                             {"text": block_text.strip(), "page": page_num}
                         )
 
-                elif "image" in block:  # Image block
-                    # Handle embedded images
-                    pass
-
             # Extract tables using PyMuPDF's table detection
             tables = _extract_tables_from_page(page)
             page_content["tables"].extend(tables)
@@ -245,10 +241,7 @@ def _classify_text_block(text: str, fonts: set, sizes: set) -> str:
         return "table_caption"
 
     # FIXED: Use math processor for consistent math detection
-    if math_processor.is_mathematical_content(text):
-        return "math"
-
-    return "body"
+    return "math" if math_processor.is_mathematical_content(text) else "body"
 
 
 # REMOVED: _is_math_content and _contains_real_math functions - now using math processor
@@ -279,10 +272,10 @@ def _extract_tables_from_page(page) -> List[Dict[str, Any]]:
         table_dict = page.find_tables()
 
         for table in table_dict:
-            table_data = []
-            for row in table.extract():
-                table_data.append([cell.strip() if cell else "" for cell in row])
-
+            table_data = [
+                [cell.strip() if cell else "" for cell in row]
+                for row in table.extract()
+            ]
             tables.append(
                 {
                     "data": table_data,

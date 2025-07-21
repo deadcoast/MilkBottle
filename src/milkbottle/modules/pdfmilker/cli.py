@@ -278,6 +278,61 @@ def menu() -> None:
             error_recovery_status_menu(console)
 
 
+def export_options_menu(console: Console) -> None:
+    """Interactive menu for export options configuration."""
+    console.print("\n[bold blue]Export Options Configuration[/bold blue]")
+
+    # Get export menu from the main export system
+    from milkbottle.export_menu import get_export_menu
+
+    export_menu = get_export_menu()
+
+    # Show available export formats
+    console.print("\n[bold]Available Export Formats:[/bold]")
+    for format_id, format_info in export_menu.available_formats.items():
+        console.print(f"  • {format_info.name}: {format_info.description}")
+
+    # Configure export options
+    console.print("\n[bold]Configure Export Options:[/bold]")
+    config = export_menu.configure_export_options()
+
+    console.print(
+        f"\n[green]✅ Export configuration saved with {len(config)} formats[/green]"
+    )
+
+
+def quality_assessment_menu(console: Console) -> None:
+    """Interactive menu for quality assessment configuration."""
+    console.print("\n[bold blue]Quality Assessment Configuration[/bold blue]")
+
+    # Get advanced analytics for quality assessment
+    from milkbottle.advanced_analytics import get_advanced_analytics
+
+    analytics = get_advanced_analytics()
+
+    console.print("\n[bold]Quality Assessment Features:[/bold]")
+    console.print("  • Readability analysis")
+    console.print("  • Content classification")
+    console.print("  • Structural completeness")
+    console.print("  • Predictive insights")
+
+    # Show available analytics capabilities
+    if analytics:
+        console.print(f"\n[dim]Analytics system: {analytics.get_system_info()}[/dim]")
+        console.print(
+            f"[dim]Available models: {len(analytics.get_available_models())}[/dim]"
+        )
+
+    # Configure quality assessment options
+    enable_ml = Confirm.ask("Enable machine learning analysis?", default=True)
+    enable_rule_based = Confirm.ask("Enable rule-based analysis?", default=True)
+    enable_predictions = Confirm.ask("Enable predictive insights?", default=True)
+
+    console.print(
+        f"\n[green]✅ Quality assessment configured: ML={enable_ml}, Rules={enable_rule_based}, Predictions={enable_predictions}[/green]"
+    )
+
+
 def single_file_menu(console: Console) -> None:
     """Interactive menu for single file processing."""
     console.print("\n[bold blue]Single PDF Extraction[/bold blue]")
@@ -744,7 +799,7 @@ def configure_batch_settings(console: Console) -> Dict[str, Any]:
 def display_batch_results(console: Console, results: List[Any]) -> None:
     """Display batch processing results."""
     successful = sum(
-        bool(not hasattr(r, "success_ratio") or r.success_ratio >= 0.5) for r in results
+        not hasattr(r, "success_ratio") or r.success_ratio >= 0.5 for r in results
     )
     total = len(results)
 

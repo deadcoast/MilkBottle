@@ -63,8 +63,7 @@ def show_main_menu() -> None:
                     idx = int(bottle_choice) - 1
                     if 0 <= idx < len(bottles):
                         alias = bottles[idx]["alias"]
-                        bottle_cli = registry.get_bottle(alias)
-                        if bottle_cli:
+                        if bottle_cli := registry.get_bottle(alias):
                             try:
                                 # Launch the bottle's Typer CLI
                                 bottle_cli()
@@ -125,7 +124,7 @@ def main(
             show_main_menu()
         except Exception as e:
             logger.error(f"[red]Fatal error:[/red] {e}")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

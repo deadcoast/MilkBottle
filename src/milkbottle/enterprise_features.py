@@ -290,10 +290,9 @@ class UserManager:
             return None
 
         user.last_login = datetime.now()
-        self._save_users()
-
-        logger.info(f"User authenticated: {username}")
-        return user
+        return self._extracted_from_delete_user_19(
+            "User authenticated: ", username, user
+        )
 
     def create_session(
         self, user: User, ip_address: str, user_agent: str, duration_hours: int = 24
@@ -408,9 +407,7 @@ class UserManager:
         if permissions is not None:
             user.permissions = set(permissions)
 
-        self._save_users()
-        logger.info(f"Updated user: {username}")
-        return user
+        return self._extracted_from_delete_user_19("Updated user: ", username, user)
 
     def delete_user(self, username: str) -> bool:
         """Delete a user.
@@ -423,10 +420,14 @@ class UserManager:
         """
         if username in self.users:
             del self.users[username]
-            self._save_users()
-            logger.info(f"Deleted user: {username}")
-            return True
+            return self._extracted_from_delete_user_19("Deleted user: ", username, True)
         return False
+
+    # TODO Rename this here and in `authenticate_user`, `update_user` and `delete_user`
+    def _extracted_from_delete_user_19(self, arg0, username, arg2):
+        self._save_users()
+        logger.info(f"{arg0}{username}")
+        return arg2
 
     def list_users(self) -> List[User]:
         """List all users.
@@ -954,10 +955,13 @@ def setup_enterprise_features() -> None:
 
     enterprise = get_enterprise_features()
 
-    # Check if admin user exists
-    admin_user = enterprise.user_manager.get_user("admin")
-    if admin_user:
-        console.print("[green]Admin user already exists.[/green]")
+    if admin_user := enterprise.user_manager.get_user("admin"):
+        console.print(
+            f"[green]Admin user '{admin_user.username}' already exists.[/green]"
+        )
+        console.print(f"Email: {admin_user.email}")
+        console.print(f"Role: {admin_user.role.value}")
+        console.print(f"Created: {admin_user.created_at.strftime('%Y-%m-%d')}")
         return
 
     # Create admin user

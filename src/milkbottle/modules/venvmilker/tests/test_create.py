@@ -87,7 +87,7 @@ def test_create_venv_happy_path(
 
     monkeypatch.setattr(subprocess, "run", _fail_run)
     wf.create_venv(cfg, Path.cwd(), console)
-    assert called is False, "create_venv reran when it should be idempotent"
+    assert not called, "create_venv reran when it should be idempotent"
 
 
 # ---------------------------------------------------------------------------

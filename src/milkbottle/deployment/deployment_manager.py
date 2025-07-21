@@ -424,10 +424,9 @@ class DeploymentManager:
             target_path = Path(self.deployment_config.target_path)
             if target_path.exists():
                 return os.access(target_path, os.W_OK)
-            else:
-                # Try to create directory
-                target_path.mkdir(parents=True, exist_ok=True)
-                return True
+            # Try to create directory
+            target_path.mkdir(parents=True, exist_ok=True)
+            return True
         except Exception:
             return False
 

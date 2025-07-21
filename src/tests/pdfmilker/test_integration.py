@@ -41,13 +41,12 @@ class TestFullPipelineIntegration:
         assert pdf1 in discovered_pdfs
         assert pdf2 in discovered_pdfs
 
-        # Step 2: Prepare output tree for each PDF
-        output_trees = {}
-        for pdf_path in discovered_pdfs:
-            output_trees[pdf_path] = prepare_output_tree(pdf_path, output_dir)
-
+        output_trees = {
+            pdf_path: prepare_output_tree(pdf_path, output_dir)
+            for pdf_path in discovered_pdfs
+        }
         # Verify output directories were created
-        for pdf_path, output_tree in output_trees.items():
+        for output_tree in output_trees.values():
             for subdir_name, subdir_path in output_tree.items():
                 assert subdir_path.exists()
 
@@ -465,11 +464,10 @@ class TestFullPipelineIntegration:
         discovered_pdfs = discover_pdfs(source_dir)
         assert len(discovered_pdfs) == 10
 
-        # Prepare output tree for each PDF
-        output_trees = {}
-        for pdf_path in discovered_pdfs:
-            output_trees[pdf_path] = prepare_output_tree(pdf_path, output_dir)
-
+        output_trees = {
+            pdf_path: prepare_output_tree(pdf_path, output_dir)
+            for pdf_path in discovered_pdfs
+        }
         # Process all PDFs
         results = []
         for pdf_path in discovered_pdfs:
@@ -592,10 +590,6 @@ class TestPipelineErrorHandling:
         discovered_pdfs = discover_pdfs(nonexistent_dir)
         assert discovered_pdfs == []
 
-        # Prepare output tree with empty list (should handle gracefully)
-        # Note: prepare_output_tree expects a single PDF path, not a list
-        pass
-
     def test_pipeline_with_permission_errors(self, tmp_path):
         """Test pipeline behavior when permission errors occur."""
         source_dir = tmp_path / "source"
@@ -641,11 +635,10 @@ class TestPipelineErrorHandling:
         discovered_pdfs = discover_pdfs(source_dir)
         assert len(discovered_pdfs) == 1
 
-        # Prepare output tree
-        output_trees = {}
-        for pdf_path in discovered_pdfs:
-            output_trees[pdf_path] = prepare_output_tree(pdf_path, output_dir)
-
+        output_trees = {
+            pdf_path: prepare_output_tree(pdf_path, output_dir)
+            for pdf_path in discovered_pdfs
+        }
         # Mock extraction to simulate corruption error
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
             mock_fitz.side_effect = ValueError("Invalid PDF")

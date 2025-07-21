@@ -142,7 +142,7 @@ class TestPerformanceMonitor:
         monitor = PerformanceMonitor()
 
         # Add some metrics
-        for i in range(5):
+        for _ in range(5):
             monitor.metrics_history.append(monitor.get_current_metrics())
 
         avg_metrics = monitor.get_average_metrics()

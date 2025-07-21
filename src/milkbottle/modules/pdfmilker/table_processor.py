@@ -235,6 +235,11 @@ class TableProcessor:
             if words := text.split():
                 # Use the x-position of the block as a column marker
                 positions.add(bbox[0])
+                # Log word count for debugging
+                if len(words) > 1:
+                    logger.debug(
+                        f"Found {len(words)} words in block at position {bbox[0]}"
+                    )
 
         return sorted(list(positions))
 
@@ -448,8 +453,8 @@ class TableProcessor:
         for pattern in self.table_patterns:
             if match := re.search(pattern, text, re.IGNORECASE):
                 if len(match.groups()) == 2:
-                    table_num = match.group(1)
-                    caption_text = match.group(2).strip()
+                    table_num = match[1]
+                    caption_text = match[2].strip()
                 else:
                     table_num = None
                     caption_text = text.strip()

@@ -193,8 +193,6 @@ def _check_dependencies() -> Dict[str, Any]:
     """Check module dependencies."""
     try:
         missing_deps = []
-        version_issues = []
-
         # Check virtualenv
         try:
             import virtualenv
@@ -226,19 +224,26 @@ def _check_dependencies() -> Dict[str, Any]:
                 "missing": missing_deps,
             }
 
-        if version_issues:
-            return {
+        version_issues = []
+
+        return (
+            {
                 "status": "warning",
                 "details": f"Version issues: {', '.join(version_issues)}",
                 "version_issues": version_issues,
             }
-
-        return {
-            "status": "healthy",
-            "details": "All dependencies available",
-            "dependencies": ["virtualenv", "Rich", "Typer", "python-slugify"],
-        }
-
+            if version_issues
+            else {
+                "status": "healthy",
+                "details": "All dependencies available",
+                "dependencies": [
+                    "virtualenv",
+                    "Rich",
+                    "Typer",
+                    "python-slugify",
+                ],
+            }
+        )
     except Exception as e:
         return {"status": "critical", "details": f"Dependency check failed: {e}"}
 

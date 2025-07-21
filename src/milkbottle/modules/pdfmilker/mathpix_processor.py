@@ -206,15 +206,15 @@ class MathpixProcessor:
                 # Parse the LaTeX content to extract individual expressions
                 # This is a simplified parser - Mathpix provides more detailed structure
                 expressions = self._extract_latex_expressions(latex_content)
-                for i, expr in enumerate(expressions):
-                    math_expressions.append(
-                        {
-                            "id": f"math_{i}",
-                            "type": "inline" if "$" in expr else "display",
-                            "content": expr,
-                            "latex": expr,
-                        }
-                    )
+                math_expressions.extend(
+                    {
+                        "id": f"math_{i}",
+                        "type": "inline" if "$" in expr else "display",
+                        "content": expr,
+                        "latex": expr,
+                    }
+                    for i, expr in enumerate(expressions)
+                )
         except Exception as e:
             logger.error(f"Failed to parse Mathpix result: {e}")
 

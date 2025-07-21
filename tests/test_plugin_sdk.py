@@ -669,7 +669,7 @@ class TestPluginTester:
 
             # Check if test file was created
             test_files = list(tests_dir.rglob("*.py"))
-            assert len(test_files) > 0
+            assert test_files
 
     def test_create_test_template_integration(self):
         """Test integration test template creation."""
@@ -684,7 +684,7 @@ class TestPluginTester:
 
             # Check if test file was created
             test_files = list(tests_dir.rglob("*integration*.py"))
-            assert len(test_files) > 0
+            assert test_files
 
     def test_create_test_template_performance(self):
         """Test performance test template creation."""
@@ -699,7 +699,7 @@ class TestPluginTester:
 
             # Check if test file was created
             test_files = list(tests_dir.rglob("*performance*.py"))
-            assert len(test_files) > 0
+            assert test_files
 
 
 class TestPluginPackager:

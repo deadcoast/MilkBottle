@@ -46,9 +46,7 @@ def test_find_interpreter_version_spec(utils: ModuleType) -> None:
     """`find_interpreter()` should find version-specific interpreters."""
 
     def mock_which(exe: str) -> str | None:
-        if exe == "python3.10":
-            return "/usr/bin/python3.10"
-        return None
+        return "/usr/bin/python3.10" if exe == "python3.10" else None
 
     with pytest.MonkeyPatch().context() as m:
         m.setattr("shutil.which", mock_which)
@@ -89,9 +87,7 @@ def test_find_interpreter_fallback_chain(utils: ModuleType) -> None:
 
     def mock_which(exe: str) -> str | None:
         # Only the last fallback should succeed
-        if exe == "python":
-            return "/usr/bin/python"
-        return None
+        return "/usr/bin/python" if exe == "python" else None
 
     with pytest.MonkeyPatch().context() as m:
         m.setattr("shutil.which", mock_which)

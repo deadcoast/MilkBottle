@@ -202,13 +202,9 @@ class PluginRepository:
                 self.logger.error(f"No version specified for plugin {plugin_name}")
                 return None
 
-            # Find version information
-            version_info = None
-            for v in plugin.versions:
-                if v.version == version:
-                    version_info = v
-                    break
-
+            version_info = next(
+                (v for v in plugin.versions if v.version == version), None
+            )
             if not version_info:
                 self.logger.error(
                     f"Version {version} not found for plugin {plugin_name}"
@@ -469,13 +465,14 @@ class PluginRepository:
             with zipfile.ZipFile(plugin_file, "r") as zip_ref:
                 zip_ref.extractall(target_dir)
 
-            # Find the main plugin directory
-            for item in target_dir.iterdir():
-                if item.is_dir() and (item / "__init__.py").exists():
-                    return item
-
-            return target_dir
-
+            return next(
+                (
+                    item
+                    for item in target_dir.iterdir()
+                    if item.is_dir() and (item / "__init__.py").exists()
+                ),
+                target_dir,
+            )
         except Exception as e:
             self.logger.error(f"Failed to extract plugin: {e}")
             return None
@@ -536,10 +533,7 @@ class PluginRepository:
             return False
 
         # Check tags
-        if tags and not any(tag in plugin.tags for tag in tags):
-            return False
-
-        return True
+        return not tags or any(tag in plugin.tags for tag in tags)
 
     async def _save_cache(self) -> None:
         """Save cache to file."""

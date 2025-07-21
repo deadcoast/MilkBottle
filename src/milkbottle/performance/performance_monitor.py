@@ -123,53 +123,52 @@ class PerformanceMonitor:
             return PerformanceMetrics(timestamp=time.time())
 
         try:
-            # CPU usage
-            cpu_usage = psutil.cpu_percent(interval=0.1) if psutil else 0.0
-
-            # Memory usage
-            memory = psutil.virtual_memory() if psutil else None
-            memory_usage = memory.percent if memory else 0.0
-            memory_available = memory.available / (1024**3) if memory else 0.0  # GB
-
-            # Disk I/O
-            disk_io = psutil.disk_io_counters() if psutil else None
-            disk_io_read = disk_io.read_bytes / (1024**2) if disk_io else 0  # MB
-            disk_io_write = disk_io.write_bytes / (1024**2) if disk_io else 0  # MB
-
-            # Network I/O
-            network_io = psutil.net_io_counters() if psutil else None
-            network_io_sent = (
-                network_io.bytes_sent / (1024**2) if network_io else 0
-            )  # MB
-            network_io_recv = (
-                network_io.bytes_recv / (1024**2) if network_io else 0
-            )  # MB
-
-            # Process info
-            active_threads = threading.active_count()
-            active_processes = len(psutil.pids()) if psutil else 0
-
-            metrics = PerformanceMetrics(
-                timestamp=time.time(),
-                cpu_usage=cpu_usage,
-                memory_usage=memory_usage,
-                memory_available=memory_available,
-                disk_io_read=disk_io_read,
-                disk_io_write=disk_io_write,
-                network_io_sent=network_io_sent,
-                network_io_recv=network_io_recv,
-                active_threads=active_threads,
-                active_processes=active_processes,
-            )
-
-            # Check thresholds and trigger callbacks
-            self._check_thresholds(metrics)
-
-            return metrics
-
+            return self._extracted_from_get_current_metrics_12()
         except Exception as e:
             logger.error(f"Error getting system metrics: {e}")
             return PerformanceMetrics(timestamp=time.time())
+
+    # TODO Rename this here and in `get_current_metrics`
+    def _extracted_from_get_current_metrics_12(self):
+        # CPU usage
+        cpu_usage = psutil.cpu_percent(interval=0.1) if psutil else 0.0
+
+        # Memory usage
+        memory = psutil.virtual_memory() if psutil else None
+        memory_usage = memory.percent if memory else 0.0
+        memory_available = memory.available / (1024**3) if memory else 0.0  # GB
+
+        # Disk I/O
+        disk_io = psutil.disk_io_counters() if psutil else None
+        disk_io_read = disk_io.read_bytes / (1024**2) if disk_io else 0  # MB
+        disk_io_write = disk_io.write_bytes / (1024**2) if disk_io else 0  # MB
+
+        # Network I/O
+        network_io = psutil.net_io_counters() if psutil else None
+        network_io_sent = network_io.bytes_sent / (1024**2) if network_io else 0  # MB
+        network_io_recv = network_io.bytes_recv / (1024**2) if network_io else 0  # MB
+
+        # Process info
+        active_threads = threading.active_count()
+        active_processes = len(psutil.pids()) if psutil else 0
+
+        metrics = PerformanceMetrics(
+            timestamp=time.time(),
+            cpu_usage=cpu_usage,
+            memory_usage=memory_usage,
+            memory_available=memory_available,
+            disk_io_read=disk_io_read,
+            disk_io_write=disk_io_write,
+            network_io_sent=network_io_sent,
+            network_io_recv=network_io_recv,
+            active_threads=active_threads,
+            active_processes=active_processes,
+        )
+
+        # Check thresholds and trigger callbacks
+        self._check_thresholds(metrics)
+
+        return metrics
 
     def get_average_metrics(self, window: Optional[int] = None) -> PerformanceMetrics:
         """Get average metrics over a time window.
@@ -309,17 +308,16 @@ class PerformanceMonitor:
             cpu_trend = "stable"
             memory_trend = "stable"
 
-        # Function profiling summary
-        function_summary = {}
-        for name, profile in self.function_profiles.items():
-            function_summary[name] = {
+        function_summary = {
+            name: {
                 "call_count": profile.call_count,
                 "avg_time": profile.avg_time,
                 "min_time": profile.min_time,
                 "max_time": profile.max_time,
                 "last_called": profile.last_called,
             }
-
+            for name, profile in self.function_profiles.items()
+        }
         return {
             "current_metrics": {
                 "cpu_usage": current_metrics.cpu_usage,

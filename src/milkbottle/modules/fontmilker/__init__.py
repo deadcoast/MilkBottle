@@ -201,8 +201,6 @@ def _check_dependencies() -> Dict[str, Any]:
     """Check module dependencies."""
     try:
         missing_deps = []
-        version_issues = []
-
         # Check fonttools
         try:
             import fonttools
@@ -240,19 +238,27 @@ def _check_dependencies() -> Dict[str, Any]:
                 "missing": missing_deps,
             }
 
-        if version_issues:
-            return {
+        version_issues = []
+
+        return (
+            {
                 "status": "warning",
                 "details": f"Version issues: {', '.join(version_issues)}",
                 "version_issues": version_issues,
             }
-
-        return {
-            "status": "healthy",
-            "details": "All dependencies available",
-            "dependencies": ["fonttools", "Rich", "Click", "Pillow", "reportlab"],
-        }
-
+            if version_issues
+            else {
+                "status": "healthy",
+                "details": "All dependencies available",
+                "dependencies": [
+                    "fonttools",
+                    "Rich",
+                    "Click",
+                    "Pillow",
+                    "reportlab",
+                ],
+            }
+        )
     except Exception as e:
         return {"status": "critical", "details": f"Dependency check failed: {e}"}
 

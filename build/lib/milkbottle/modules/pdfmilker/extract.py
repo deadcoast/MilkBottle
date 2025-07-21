@@ -43,15 +43,11 @@ def extract_images(pdf_path: Path, output_dir: Path) -> List[Path]:
             for img_index, img in enumerate(images):
                 xref = img[0]
                 pix = fitz.Pixmap(doc, xref)
-                if pix.n < 5:  # this is GRAY or RGB
-                    img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
-                    pix.save(str(img_path))
-                    saved_images.append(img_path)
-                else:  # CMYK: convert to RGB first
+                if pix.n >= 5:
                     pix = fitz.Pixmap(fitz.csRGB, pix)
-                    img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
-                    pix.save(str(img_path))
-                    saved_images.append(img_path)
+                img_path = output_dir / f"page{page_num}_img{img_index+1}.png"
+                pix.save(str(img_path))
+                saved_images.append(img_path)
                 pix = None
         doc.close()
         logger.info(f"Extracted {len(saved_images)} images from {pdf_path}")

@@ -6,6 +6,7 @@ making it easier for users to configure services and modules.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -132,13 +133,10 @@ class PDFmilkerWizard(ConfigurationWizard):
 
         selected_formats = []
         for choice in format_choice.split(","):
-            try:
+            with contextlib.suppress(ValueError):
                 idx = int(choice.strip()) - 1
                 if 0 <= idx < len(formats):
                     selected_formats.append(formats[idx])
-            except ValueError:
-                pass
-
         if not selected_formats:
             selected_formats = ["txt", "json"]
 
@@ -161,9 +159,7 @@ class PDFmilkerWizard(ConfigurationWizard):
 
         # Grobid service
         console.print("\n[bold]Grobid Service (for enhanced text extraction)[/bold]")
-        use_grobid = Confirm.ask("Use Grobid service?", default=False)
-
-        if use_grobid:
+        if use_grobid := Confirm.ask("Use Grobid service?", default=False):
             grobid_url = Prompt.ask(
                 "Grobid service URL", default="http://localhost:8070"
             )
@@ -172,14 +168,14 @@ class PDFmilkerWizard(ConfigurationWizard):
                 "url": grobid_url,
                 "timeout": 30,
             }
+            console.print(f"[green]✅ Grobid service configured: {grobid_url}[/green]")
         else:
             self.config["services"]["grobid"] = {"enabled": False}
+            console.print("[yellow]⚠️ Grobid service disabled[/yellow]")
 
         # MathPix service
         console.print("\n[bold]MathPix Service (for math formula extraction)[/bold]")
-        use_mathpix = Confirm.ask("Use MathPix service?", default=False)
-
-        if use_mathpix:
+        if use_mathpix := Confirm.ask("Use MathPix service?", default=False):
             mathpix_app_id = Prompt.ask("MathPix App ID")
             mathpix_app_key = Prompt.ask("MathPix App Key", password=True)
 
@@ -189,8 +185,12 @@ class PDFmilkerWizard(ConfigurationWizard):
                 "app_key": mathpix_app_key,
                 "timeout": 30,
             }
+            console.print(
+                f"[green]✅ MathPix service configured: {mathpix_app_id}[/green]"
+            )
         else:
             self.config["services"]["mathpix"] = {"enabled": False}
+            console.print("[yellow]⚠️ MathPix service disabled[/yellow]")
 
     def _configure_quality_settings(self) -> None:
         """Configure quality assessment settings."""
@@ -267,26 +267,23 @@ class PDFmilkerWizard(ConfigurationWizard):
 
         console.print(summary_table)
 
-        # Validate configuration
-        is_valid = self._validate_configuration()
-
-        if is_valid:
+        if is_valid := self._validate_configuration():
+            console.print("[green]✅ Configuration validation passed[/green]")
             # Save configuration
             config_path = Path("pdfmilker_config.toml")
-            save_config = Confirm.ask(
+            if save_config := Confirm.ask(
                 f"Save configuration to {config_path}?", default=True
-            )
-
-            if save_config:
+            ):
                 self.save_config(config_path)
+                console.print(f"[green]✅ Configuration saved to {config_path}[/green]")
                 console.print(
                     "[green]Configuration wizard completed successfully![/green]"
                 )
             else:
-                console.print("[yellow]Configuration not saved.[/yellow]")
+                console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
         else:
             console.print(
-                "[red]Configuration validation failed. Please review settings.[/red]"
+                "[red]❌ Configuration validation failed. Please review settings.[/red]"
             )
 
     def _validate_configuration(self) -> bool:
@@ -366,14 +363,13 @@ class VenvMilkerWizard(ConfigurationWizard):
         python_version = Prompt.ask("Python version to use", default="3.11")
         self.config["python"] = python_version
 
-        # Python interpreter path
-        use_system_python = Confirm.ask("Use system Python?", default=True)
-
-        if not use_system_python:
-            python_path = Prompt.ask("Path to Python interpreter")
-            self.config["python_path"] = python_path
-        else:
+        if use_system_python := Confirm.ask("Use system Python?", default=True):
             self.config["python_path"] = None
+            console.print("[green]✅ Using system Python[/green]")
+        else:
+            python_path = Prompt.ask("Custom Python path")
+            self.config["python_path"] = python_path
+            console.print(f"[green]✅ Using custom Python: {python_path}[/green]")
 
     def _configure_packages(self) -> None:
         """Configure package management."""
@@ -429,13 +425,14 @@ class VenvMilkerWizard(ConfigurationWizard):
 
         # Save configuration
         config_path = Path("venvmilker_config.toml")
-        save_config = Confirm.ask(f"Save configuration to {config_path}?", default=True)
-
-        if save_config:
+        if save_config := Confirm.ask(
+            f"Save configuration to {config_path}?", default=True
+        ):
             self.save_config(config_path)
+            console.print(f"[green]✅ Configuration saved to {config_path}[/green]")
             console.print("[green]Configuration wizard completed successfully![/green]")
         else:
-            console.print("[yellow]Configuration not saved.[/yellow]")
+            console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
 
 
 class FontMilkerWizard(ConfigurationWizard):
@@ -492,13 +489,10 @@ class FontMilkerWizard(ConfigurationWizard):
 
         selected_formats = []
         for choice in format_choice.split(","):
-            try:
+            with contextlib.suppress(ValueError):
                 idx = int(choice.strip()) - 1
                 if 0 <= idx < len(formats):
                     selected_formats.append(formats[idx])
-            except ValueError:
-                pass
-
         if not selected_formats:
             selected_formats = ["ttf", "otf"]
 
@@ -546,13 +540,14 @@ class FontMilkerWizard(ConfigurationWizard):
 
         # Save configuration
         config_path = Path("fontmilker_config.toml")
-        save_config = Confirm.ask(f"Save configuration to {config_path}?", default=True)
-
-        if save_config:
+        if save_config := Confirm.ask(
+            f"Save configuration to {config_path}?", default=True
+        ):
             self.save_config(config_path)
+            console.print(f"[green]✅ Configuration saved to {config_path}[/green]")
             console.print("[green]Configuration wizard completed successfully![/green]")
         else:
-            console.print("[yellow]Configuration not saved.[/yellow]")
+            console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
 
 
 def run_wizard(wizard_type: str) -> Dict[str, Any]:
@@ -579,9 +574,11 @@ def wizard_cli(wizard_type: str) -> None:
     """Run a configuration wizard."""
     try:
         config = run_wizard(wizard_type)
-        console.print("[green]Wizard completed successfully![/green]")
+        console.print(
+            f"[green]✅ Wizard completed successfully! Generated {len(config)} configuration items[/green]"
+        )
     except Exception as e:
-        console.print(f"[red]Wizard failed: {e}[/red]")
+        console.print(f"[red]❌ Wizard failed: {e}[/red]")
         sys.exit(1)
 
 

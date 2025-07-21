@@ -269,9 +269,7 @@ class BottleRegistry:
         }
 
         if alias:
-            # Check specific bottle
-            bottle_info = self.get_bottle_metadata(alias)
-            if bottle_info:
+            if bottle_info := self.get_bottle_metadata(alias):
                 results["bottles"][alias] = self._check_bottle_health(bottle_info)
             else:
                 results["bottles"][alias] = {

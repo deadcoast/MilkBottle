@@ -341,10 +341,8 @@ class ResourceOptimizer:
         total_size = 0
         for file_path in path.rglob("*"):
             if file_path.is_file():
-                try:
+                with contextlib.suppress(Exception):
                     total_size += file_path.stat().st_size
-                except Exception:
-                    pass
         return total_size
 
 
@@ -397,10 +395,9 @@ class ParallelProcessor:
         try:
             if asyncio.iscoroutinefunction(processor):
                 return await processor(item)
-            else:
-                # Run CPU-bound functions in thread pool
-                loop = asyncio.get_event_loop()
-                return await loop.run_in_executor(None, processor, item)
+            # Run CPU-bound functions in thread pool
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, processor, item)
         except Exception as e:
             self.logger.error(f"Error processing item: {e}")
             raise

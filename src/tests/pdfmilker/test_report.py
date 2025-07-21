@@ -552,4 +552,4 @@ class TestReportIntegration:
             assert loaded_data["status"] == "success"
 
         # Verify different filenames
-        assert len(set(r.name for r in reports)) == 3
+        assert len({r.name for r in reports}) == 3

@@ -190,7 +190,6 @@ class ParallelProcessor:
                         success=False,
                         error=str(result),
                     )
-                    self.task_history.append(task_result)
                 else:
                     processed_results.append(result)
                     completed_count += 1
@@ -201,8 +200,7 @@ class ParallelProcessor:
                         execution_time=time.time() - start_time,
                         success=True,
                     )
-                    self.task_history.append(task_result)
-
+                self.task_history.append(task_result)
             # Update statistics
             total_time = time.time() - start_time
             self.stats.completed_tasks = completed_count
@@ -421,12 +419,10 @@ class ParallelProcessor:
         """Execute a single async task."""
         try:
             if asyncio.iscoroutinefunction(func):
-                result = await func(item, **kwargs)
-            else:
-                # Run sync function in thread pool
-                loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(self.executor, func, item, **kwargs)
-            return result
+                return await func(item, **kwargs)
+            # Run sync function in thread pool
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(self.executor, func, item, **kwargs)
         except Exception as e:
             logger.error(f"Async task {task_id} failed: {e}")
             raise

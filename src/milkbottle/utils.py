@@ -76,10 +76,7 @@ class InputValidator:
         if len(value) < min_length:
             return False
 
-        if max_length and len(value) > max_length:
-            return False
-
-        return True
+        return not max_length or len(value) <= max_length
 
     def validate_path(self, path: Any) -> bool:
         """Validate path input.

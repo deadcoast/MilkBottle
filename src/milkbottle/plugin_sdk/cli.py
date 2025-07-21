@@ -50,7 +50,7 @@ def create(
     try:
         output_path = Path(output_dir) if output_dir else None
 
-        success = create_plugin(
+        if success := create_plugin(
             name=name,
             template=template,
             output_dir=output_path,
@@ -60,9 +60,7 @@ def create(
             license=license,
             version=version,
             init_git=init_git,
-        )
-
-        if success:
+        ):
             console.print(f"[green]✓ Successfully created plugin: {name}[/green]")
         else:
             console.print(f"[red]✗ Failed to create plugin: {name}[/red]")
@@ -166,9 +164,7 @@ def package(plugin_path: str, output: str, format: str):
         path = Path(plugin_path)
         output_path = Path(output) if output else None
 
-        success = package_plugin(path, output_path, format)
-
-        if success:
+        if success := package_plugin(path, output_path, format):
             console.print("[green]✓ Successfully packaged plugin[/green]")
         else:
             console.print("[red]✗ Failed to package plugin[/red]")
@@ -226,9 +222,7 @@ def build(plugin_path: str, type: str):
     """Build a plugin (validate, test, and optionally package)."""
     try:
         path = Path(plugin_path)
-        success = build_plugin(path, type)
-
-        if success:
+        if success := build_plugin(path, type):
             console.print(f"[green]✓ Successfully built plugin ({type})[/green]")
         else:
             console.print("[red]✗ Failed to build plugin[/red]")
@@ -292,9 +286,7 @@ def create_tests(plugin_path: str, type: str):
         path = Path(plugin_path)
         sdk = get_sdk()
 
-        success = sdk.tester.create_test_template(path, type)
-
-        if success:
+        if success := sdk.tester.create_test_template(path, type):
             console.print(f"[green]✓ Successfully created {type} test template[/green]")
         else:
             console.print(f"[red]✗ Failed to create {type} test template[/red]")
@@ -313,9 +305,7 @@ def create_manifest(plugin_path: str):
         path = Path(plugin_path)
         sdk = get_sdk()
 
-        success = sdk.packager.create_manifest(path)
-
-        if success:
+        if success := sdk.packager.create_manifest(path):
             console.print("[green]✓ Successfully created manifest file[/green]")
         else:
             console.print("[red]✗ Failed to create manifest file[/red]")
@@ -336,9 +326,7 @@ def create_template(template_name: str, template_path: str, description: str):
         path = Path(template_path)
         sdk = get_sdk()
 
-        success = sdk.create_template(template_name, path, description or "")
-
-        if success:
+        if success := sdk.create_template(template_name, path, description or ""):
             console.print(
                 f"[green]✓ Successfully created template: {template_name}[/green]"
             )

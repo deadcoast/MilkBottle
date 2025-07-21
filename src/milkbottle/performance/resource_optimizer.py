@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import gc
 import logging
 import time
@@ -79,44 +80,47 @@ class ResourceOptimizer:
             return ResourceUsage()
 
         try:
-            # CPU usage
-            cpu_percent = psutil.cpu_percent(interval=0.1) if psutil else 0.0
-
-            # Memory usage
-            memory = psutil.virtual_memory() if psutil else None
-            memory_percent = memory.percent if memory else 0.0
-            memory_available_gb = memory.available / (1024**3) if memory else 0.0
-
-            # Disk usage
-            disk = psutil.disk_usage("/") if psutil else None
-            disk_usage_percent = disk.percent if disk else 0.0
-            disk_free_gb = disk.free / (1024**3) if disk else 0.0
-
-            # Network I/O
-            network = psutil.net_io_counters() if psutil else None
-            network_io_sent_mb = network.bytes_sent / (1024**2) if network else 0.0
-            network_io_recv_mb = network.bytes_recv / (1024**2) if network else 0.0
-
-            # Process information
-            process = psutil.Process() if psutil else None
-            open_files = len(process.open_files()) if process else 0
-            connections = len(process.connections()) if process else 0
-
-            return ResourceUsage(
-                cpu_percent=cpu_percent,
-                memory_percent=memory_percent,
-                memory_available_gb=memory_available_gb,
-                disk_usage_percent=disk_usage_percent,
-                disk_free_gb=disk_free_gb,
-                network_io_sent_mb=network_io_sent_mb,
-                network_io_recv_mb=network_io_recv_mb,
-                open_files=open_files,
-                active_connections=connections,
-            )
-
+            return self._extracted_from_get_resource_usage_12()
         except Exception as e:
             logger.error(f"Error getting resource usage: {e}")
             return ResourceUsage()
+
+    # TODO Rename this here and in `get_resource_usage`
+    def _extracted_from_get_resource_usage_12(self):
+        # CPU usage
+        cpu_percent = psutil.cpu_percent(interval=0.1) if psutil else 0.0
+
+        # Memory usage
+        memory = psutil.virtual_memory() if psutil else None
+        memory_percent = memory.percent if memory else 0.0
+        memory_available_gb = memory.available / (1024**3) if memory else 0.0
+
+        # Disk usage
+        disk = psutil.disk_usage("/") if psutil else None
+        disk_usage_percent = disk.percent if disk else 0.0
+        disk_free_gb = disk.free / (1024**3) if disk else 0.0
+
+        # Network I/O
+        network = psutil.net_io_counters() if psutil else None
+        network_io_sent_mb = network.bytes_sent / (1024**2) if network else 0.0
+        network_io_recv_mb = network.bytes_recv / (1024**2) if network else 0.0
+
+        # Process information
+        process = psutil.Process() if psutil else None
+        open_files = len(process.open_files()) if process else 0
+        connections = len(process.connections()) if process else 0
+
+        return ResourceUsage(
+            cpu_percent=cpu_percent,
+            memory_percent=memory_percent,
+            memory_available_gb=memory_available_gb,
+            disk_usage_percent=disk_usage_percent,
+            disk_free_gb=disk_free_gb,
+            network_io_sent_mb=network_io_sent_mb,
+            network_io_recv_mb=network_io_recv_mb,
+            open_files=open_files,
+            active_connections=connections,
+        )
 
     def optimize(self) -> Dict[str, Any]:
         """Run comprehensive resource optimization.
@@ -124,12 +128,9 @@ class ResourceOptimizer:
         Returns:
             Dictionary with optimization results
         """
-        optimizations = {}
-
         # Memory optimization
         memory_result = self._optimize_memory()
-        optimizations["memory"] = memory_result
-
+        optimizations = {"memory": memory_result}
         # CPU optimization
         cpu_result = self._optimize_cpu()
         optimizations["cpu"] = cpu_result
@@ -167,11 +168,6 @@ class ResourceOptimizer:
             if hasattr(sys, "intern"):
                 sys.intern.clear()
 
-            # Clear import cache
-            if hasattr(sys.modules, "__dict__"):
-                # Clear unused modules (be careful with this)
-                pass
-
             after_usage = self.get_resource_usage()
 
             improvement = before_usage.memory_percent - after_usage.memory_percent
@@ -200,26 +196,23 @@ class ResourceOptimizer:
         try:
             before_usage = self.get_resource_usage()
 
-            # Check for high CPU processes
-            high_cpu_processes = []
             if PSUTIL_AVAILABLE and psutil:
+                # Check for high CPU processes
+                high_cpu_processes = []
                 for proc in psutil.process_iter(["pid", "name", "cpu_percent"]):
-                    try:
+                    with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
                         if proc.info["cpu_percent"] > 50:
                             high_cpu_processes.append(proc.info)
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        pass
-
             # Suggest CPU optimizations
             suggestions = []
             if before_usage.cpu_percent > self.limits["max_cpu_percent"]:
-                suggestions.append("Consider reducing parallel processing")
-                suggestions.append("Check for CPU-intensive operations")
-
-            improvement = 0.0  # CPU optimization is mostly advisory
-            if suggestions:
-                improvement = 1.0  # Indicate that suggestions were provided
-
+                suggestions.extend(
+                    (
+                        "Consider reducing parallel processing",
+                        "Check for CPU-intensive operations",
+                    )
+                )
+            improvement = 1.0 if suggestions else 0.0
             result = OptimizationResult(
                 optimization_type="cpu",
                 success=before_usage.cpu_percent < self.limits["max_cpu_percent"],
@@ -247,10 +240,13 @@ class ResourceOptimizer:
             # Check disk space
             suggestions = []
             if before_usage.disk_usage_percent > self.limits["max_disk_percent"]:
-                suggestions.append("Consider cleaning temporary files")
-                suggestions.append("Check for large log files")
-                suggestions.append("Review cache directories")
-
+                suggestions.extend(
+                    (
+                        "Consider cleaning temporary files",
+                        "Check for large log files",
+                        "Review cache directories",
+                    )
+                )
             # Check for temporary files
             temp_dirs = ["/tmp", "/var/tmp", str(Path.home() / ".cache")]
             temp_files = []
@@ -258,20 +254,16 @@ class ResourceOptimizer:
             for temp_dir in temp_dirs:
                 temp_path = Path(temp_dir)
                 if temp_path.exists():
-                    try:
-                        for file_path in temp_path.rglob("*"):
+                    with contextlib.suppress(PermissionError):
+                        temp_files.extend(
+                            str(file_path)
+                            for file_path in temp_path.rglob("*")
                             if (
                                 file_path.is_file()
                                 and file_path.stat().st_size > 10 * 1024 * 1024
-                            ):  # 10MB
-                                temp_files.append(str(file_path))
-                    except PermissionError:
-                        pass
-
-            improvement = 0.0
-            if suggestions:
-                improvement = 1.0
-
+                            )
+                        )
+            improvement = 1.0 if suggestions else 0.0
             result = OptimizationResult(
                 optimization_type="disk",
                 success=before_usage.disk_usage_percent
@@ -303,17 +295,17 @@ class ResourceOptimizer:
                 before_usage.network_io_sent_mb > 100
                 or before_usage.network_io_recv_mb > 100
             ):
-                suggestions.append("Consider implementing connection pooling")
-                suggestions.append("Check for unnecessary network requests")
-                suggestions.append("Implement request caching")
-
-            improvement = 0.0
-            if suggestions:
-                improvement = 1.0
-
+                suggestions.extend(
+                    (
+                        "Consider implementing connection pooling",
+                        "Check for unnecessary network requests",
+                        "Implement request caching",
+                    )
+                )
+            improvement = 1.0 if suggestions else 0.0
             result = OptimizationResult(
                 optimization_type="network",
-                success=len(suggestions) == 0,
+                success=not suggestions,
                 improvement=improvement,
                 details=f"Network I/O: {before_usage.network_io_sent_mb:.1f}MB sent, {before_usage.network_io_recv_mb:.1f}MB received. Suggestions: {'; '.join(suggestions)}",
             )
@@ -337,16 +329,14 @@ class ResourceOptimizer:
 
             suggestions = []
             if before_usage.open_files > 100:
-                suggestions.append(
-                    "Consider using context managers for file operations"
+                suggestions.extend(
+                    (
+                        "Consider using context managers for file operations",
+                        "Implement file handle pooling",
+                        "Check for unclosed file handles",
+                    )
                 )
-                suggestions.append("Implement file handle pooling")
-                suggestions.append("Check for unclosed file handles")
-
-            improvement = 0.0
-            if suggestions:
-                improvement = 1.0
-
+            improvement = 1.0 if suggestions else 0.0
             result = OptimizationResult(
                 optimization_type="file_handles",
                 success=before_usage.open_files < 100,
@@ -435,7 +425,7 @@ class ResourceOptimizer:
 
         # Calculate optimization success rate
         successful_optimizations = sum(
-            1 for opt in self.optimization_history if opt.success
+            bool(opt.success) for opt in self.optimization_history
         )
         total_optimizations = len(self.optimization_history)
         success_rate = (

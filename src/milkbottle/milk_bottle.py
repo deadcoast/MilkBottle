@@ -127,10 +127,13 @@ def _handle_setup_enterprise() -> None:
 
     enterprise = get_enterprise_features()
 
-    # Check if admin user exists
-    admin_user = enterprise.user_manager.get_user("admin")
-    if admin_user:
-        console.print("[green]Admin user already exists.[/green]")
+    if admin_user := enterprise.user_manager.get_user("admin"):
+        console.print(
+            f"[green]Admin user '{admin_user.username}' already exists.[/green]"
+        )
+        console.print(f"Email: {admin_user.email}")
+        console.print(f"Role: {admin_user.role.value}")
+        console.print(f"Created: {admin_user.created_at.strftime('%Y-%m-%d')}")
         return
 
     # Create admin user
@@ -390,31 +393,33 @@ def _show_advanced_analytics() -> None:
         return
 
     try:
-        # Analyze content with advanced analytics
-        analytics = get_advanced_analytics()
-        content_data = {"file_path": file_path}
-        result = analytics.analyze_content(content_data)
-
-        console.print("\n[bold]Analytics Results:[/bold]")
-        console.print(f"Quality Score: {result.quality_metrics.overall_score:.2f}")
-        console.print(f"Document Type: {result.classification.document_type}")
-        console.print(f"Complexity Level: {result.classification.complexity_level}")
-        console.print(
-            f"Processing Time Prediction: {result.insights.processing_time_prediction:.1f}s"
-        )
-
-        # Log analytics access
-        if enterprise.current_user:
-            enterprise.log_analytics_access(
-                str(file_path), "full_analysis", success=True
-            )
-
+        _extracted_from__show_advanced_analytics_25(file_path, enterprise)
     except Exception as e:
         console.print(f"[red]Analytics failed: {e}[/red]")
         if enterprise.current_user:
             enterprise.log_analytics_access(
                 str(file_path), "full_analysis", success=False, error_message=str(e)
             )
+
+
+# TODO Rename this here and in `_show_advanced_analytics`
+def _extracted_from__show_advanced_analytics_25(file_path, enterprise):
+    # Analyze content with advanced analytics
+    analytics = get_advanced_analytics()
+    content_data = {"file_path": file_path}
+    result = analytics.analyze_content(content_data)
+
+    console.print("\n[bold]Analytics Results:[/bold]")
+    console.print(f"Quality Score: {result.quality_metrics.overall_score:.2f}")
+    console.print(f"Document Type: {result.classification.document_type}")
+    console.print(f"Complexity Level: {result.classification.complexity_level}")
+    console.print(
+        f"Processing Time Prediction: {result.insights.processing_time_prediction:.1f}s"
+    )
+
+    # Log analytics access
+    if enterprise.current_user:
+        enterprise.log_analytics_access(str(file_path), "full_analysis", success=True)
 
 
 def _show_rest_api_server() -> None:
@@ -516,9 +521,7 @@ def _show_export_menu() -> None:
         }
 
         export_menu = get_export_menu()
-        selected_formats = export_menu.show_format_selection(sample_content)
-
-        if selected_formats:
+        if selected_formats := export_menu.show_format_selection(sample_content):
             console.print(f"\nSelected formats: {', '.join(selected_formats)}")
 
             # Show format previews

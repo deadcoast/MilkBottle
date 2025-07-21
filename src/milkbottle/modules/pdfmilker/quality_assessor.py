@@ -265,8 +265,9 @@ class QualityAssessor:
 
         # Check for proper sentence structure
         sentences = re.split(r"[.!?]+", body_text)
-        valid_sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
-        if valid_sentences:
+        if valid_sentences := [
+            s.strip() for s in sentences if len(s.strip()) > 10
+        ]:
             score += min(len(valid_sentences) / max(len(sentences), 1), 1.0)
         total_checks += 1.0
 
@@ -483,9 +484,7 @@ class QualityAssessor:
         score = 0.0
         total_checks = 0
 
-        # Check for consistent formatting
-        body_text = content.get("body_text", "")
-        if body_text:
+        if body_text := content.get("body_text", ""):
             # Check for proper line breaks
             lines = body_text.split("\n")
             if non_empty_lines := [line.strip() for line in lines if line.strip()]:

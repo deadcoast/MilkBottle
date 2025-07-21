@@ -59,8 +59,8 @@ class PluginManifest:
         # Validate version format
         try:
             version.parse(self.data["version"])
-        except version.InvalidVersion:
-            raise ValidationError(f"Invalid version format: {self.data['version']}")
+        except version.InvalidVersion as e:
+            raise ValidationError(f"Invalid version format: {self.data['version']}") from e
 
         # Validate entry point
         if not isinstance(self.data["entry_point"], str):
@@ -135,7 +135,7 @@ class PluginLoader:
         for plugin_dir in self.plugin_dirs:
             expanded_dir = Path(plugin_dir).expanduser()
             if expanded_dir.exists():
-                plugins.update(self._scan_plugin_directory(expanded_dir))
+                plugins |= self._scan_plugin_directory(expanded_dir)
 
         return plugins
 
@@ -294,7 +294,7 @@ class PluginLoader:
             return module
 
         except ImportError as e:
-            raise PluginError(f"Failed to import plugin {manifest.name}: {e}")
+            raise PluginError(f"Failed to import plugin {manifest.name}: {e}") from e
 
     def get_loaded_plugins(self) -> Dict[str, Any]:
         """Get all loaded plugins.

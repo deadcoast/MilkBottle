@@ -72,7 +72,7 @@ def render_menu_border(
     """
     border_text = Text(title, style=style, justify="center")
     subtitle_text = Text(subtitle, style="dim", justify="center")
-    panel = Panel(
+    return Panel(
         subtitle_text,
         title=border_text,
         width=width,
@@ -80,7 +80,6 @@ def render_menu_border(
         box=MINIMAL_DOUBLE_HEAD,
         padding=(1, 2),
     )
-    return panel
 
 
 def print_menu_border() -> None:

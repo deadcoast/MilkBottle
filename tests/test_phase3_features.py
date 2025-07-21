@@ -805,4 +805,4 @@ class TestIntegration:
         # Check that error was logged
         logs = manager.logger.get_recent_logs()
         error_logs = [log for log in logs if log["level"] == "error"]
-        assert len(error_logs) >= 1
+        assert error_logs

@@ -57,11 +57,10 @@ class GrobidExtractor:
 
             if result and result.status_code == 200:
                 return self._parse_grobid_result(result.text)
-            else:
-                logger.warning(
-                    f"Grobid processing failed: {result.status_code if result else 'No response'}"
-                )
-                return self._fallback_extraction(pdf_path)
+            logger.warning(
+                f"Grobid processing failed: {result.status_code if result else 'No response'}"
+            )
+            return self._fallback_extraction(pdf_path)
 
         except Exception as e:
             logger.error(f"Grobid extraction failed: {e}")
@@ -82,33 +81,27 @@ class GrobidExtractor:
 
             # Extract title
             title = ""
-            title_elem = soup.find("title")
-            if title_elem:
+            if title_elem := soup.find("title"):
                 title = title_elem.get_text(strip=True)
 
             # Extract abstract
             abstract = ""
-            abstract_elem = soup.find("abstract")
-            if abstract_elem:
+            if abstract_elem := soup.find("abstract"):
                 abstract = abstract_elem.get_text(strip=True)
 
             # Extract body text
             body_text = ""
-            body_elem = soup.find("body")
-            if body_elem:
+            if body_elem := soup.find("body"):
                 body_text = body_elem.get_text(strip=True)
 
-            # Extract mathematical formulas
-            math_formulas = []
-            for formula in soup.find_all("formula"):
-                math_formulas.append(
-                    {
-                        "type": formula.get("type", "inline"),
-                        "content": formula.get_text(strip=True),
-                        "id": formula.get("xml:id", ""),
-                    }
-                )
-
+            math_formulas = [
+                {
+                    "type": formula.get("type", "inline"),
+                    "content": formula.get_text(strip=True),
+                    "id": formula.get("xml:id", ""),
+                }
+                for formula in soup.find_all("formula")
+            ]
             # Extract tables
             tables = []
             for table in soup.find_all("table"):
@@ -148,9 +141,7 @@ class GrobidExtractor:
         try:
             rows = []
             for row in table_elem.find_all("row"):
-                cells = []
-                for cell in row.find_all("cell"):
-                    cells.append(cell.get_text(strip=True))
+                cells = [cell.get_text(strip=True) for cell in row.find_all("cell")]
                 rows.append(cells)
 
             return {
@@ -168,13 +159,11 @@ class GrobidExtractor:
             title = ""
             authors = []
 
-            title_elem = ref_elem.find("title")
-            if title_elem:
+            if title_elem := ref_elem.find("title"):
                 title = title_elem.get_text(strip=True)
 
             for author in ref_elem.find_all("author"):
-                author_text = author.get_text(strip=True)
-                if author_text:
+                if author_text := author.get_text(strip=True):
                     authors.append(author_text)
 
             return {

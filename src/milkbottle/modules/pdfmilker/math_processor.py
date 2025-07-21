@@ -52,9 +52,7 @@ class MathProcessor:
         if mathpix_result := self._try_mathpix_api(latex_text):
             return mathpix_result
 
-        # Use Pandoc if available
-        pandoc_result = self._try_pandoc_conversion(latex_text)
-        if pandoc_result:
+        if pandoc_result := self._try_pandoc_conversion(latex_text):
             return pandoc_result
 
         # Fallback to simple conversion

@@ -234,8 +234,8 @@ class ImageProcessor:
         for pattern in self.caption_patterns:
             if match := re.search(pattern, text, re.IGNORECASE):
                 if len(match.groups()) == 2:
-                    figure_num = match.group(1)
-                    caption_text = match.group(2).strip()
+                    figure_num = match[1]
+                    caption_text = match[2].strip()
                 else:
                     figure_num = None
                     caption_text = text.strip()

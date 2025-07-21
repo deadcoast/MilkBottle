@@ -125,12 +125,9 @@ class MemoryOptimizer:
         """
         before_stats = self.get_memory_stats()
 
-        optimizations = {}
-
         # Garbage collection optimization
         gc_result = self._optimize_garbage_collection()
-        optimizations["garbage_collection"] = gc_result
-
+        optimizations = {"garbage_collection": gc_result}
         # Memory leak detection
         leak_result = self._detect_memory_leaks()
         optimizations["memory_leaks"] = leak_result
@@ -213,57 +210,60 @@ class MemoryOptimizer:
             return {"success": False, "error": "Tracemalloc not enabled"}
 
         try:
-            # Take current snapshot
-            current_snapshot = tracemalloc.take_snapshot()
-
-            if not self.leak_snapshots:
-                # First snapshot, just store it
-                self.leak_snapshots.append(current_snapshot)
-                return {
-                    "success": True,
-                    "message": "Initial snapshot taken",
-                    "leaks_detected": 0,
-                }
-
-            # Compare with previous snapshot
-            previous_snapshot = self.leak_snapshots[-1]
-            top_stats = current_snapshot.compare_to(previous_snapshot, "lineno")
-
-            # Filter potential leaks
-            leaks = []
-            for stat in top_stats:
-                if (
-                    stat.size_diff > self.leak_threshold_mb * 1024 * 1024
-                ):  # Convert to bytes
-                    leak = MemoryLeak(
-                        file_path=stat.traceback.format()[-1].split(":")[0],
-                        line_number=int(stat.traceback.format()[-1].split(":")[1]),
-                        size_mb=stat.size_diff / (1024 * 1024),
-                        count=stat.count_diff,
-                        traceback=stat.traceback.format(),
-                    )
-                    leaks.append(leak)
-
-            # Store current snapshot
-            self.leak_snapshots.append(current_snapshot)
-
-            return {
-                "success": True,
-                "leaks_detected": len(leaks),
-                "leaks": [
-                    {
-                        "file": leak.file_path,
-                        "line": leak.line_number,
-                        "size_mb": leak.size_mb,
-                        "count": leak.count,
-                    }
-                    for leak in leaks
-                ],
-            }
-
+            return self._extracted_from__detect_memory_leaks_8()
         except Exception as e:
             logger.error(f"Memory leak detection failed: {e}")
             return {"success": False, "error": str(e)}
+
+    # TODO Rename this here and in `_detect_memory_leaks`
+    def _extracted_from__detect_memory_leaks_8(self):
+        # Take current snapshot
+        current_snapshot = tracemalloc.take_snapshot()
+
+        if not self.leak_snapshots:
+            # First snapshot, just store it
+            self.leak_snapshots.append(current_snapshot)
+            return {
+                "success": True,
+                "message": "Initial snapshot taken",
+                "leaks_detected": 0,
+            }
+
+        # Compare with previous snapshot
+        previous_snapshot = self.leak_snapshots[-1]
+        top_stats = current_snapshot.compare_to(previous_snapshot, "lineno")
+
+        # Filter potential leaks
+        leaks = []
+        for stat in top_stats:
+            if (
+                stat.size_diff > self.leak_threshold_mb * 1024 * 1024
+            ):  # Convert to bytes
+                leak = MemoryLeak(
+                    file_path=stat.traceback.format()[-1].split(":")[0],
+                    line_number=int(stat.traceback.format()[-1].split(":")[1]),
+                    size_mb=stat.size_diff / (1024 * 1024),
+                    count=stat.count_diff,
+                    traceback=stat.traceback.format(),
+                )
+                leaks.append(leak)
+
+        # Store current snapshot
+        self.leak_snapshots.append(current_snapshot)
+
+        return {
+            "success": True,
+            "leaks_detected": len(leaks),
+            "leaks": [
+                {
+                    "file": leak.file_path,
+                    "line": leak.line_number,
+                    "size_mb": leak.size_mb,
+                    "count": leak.count,
+                }
+                for leak in leaks
+            ],
+        }
 
     def _cleanup_large_objects(self) -> Dict[str, Any]:
         """Clean up large objects."""

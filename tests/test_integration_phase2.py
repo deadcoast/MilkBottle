@@ -25,7 +25,7 @@ class TestPhase2Integration:
         found_modules = [name for name in bottles.keys() if name in expected_modules]
 
         # At least some modules should be found
-        assert len(found_modules) > 0
+        assert found_modules
 
         # Check that found modules have enhanced metadata
         for module_name in found_modules:
@@ -85,9 +85,7 @@ class TestPhase2Integration:
 
         # Get bottles with standard interface
         bottles = registry_instance.list_bottles()
-        standard_bottles = [b for b in bottles if b["has_standard_interface"]]
-
-        if standard_bottles:
+        if standard_bottles := [b for b in bottles if b["has_standard_interface"]]:
             # Test configuration validation for first standard bottle
             first_bottle = standard_bottles[0]
             bottle_name = first_bottle["name"]
@@ -164,9 +162,7 @@ class TestPhase2Integration:
         assert "timestamp" in health_result
         assert "overall_status" in health_result
 
-        # Test validate_config function
-        bottles = registry.list_bottles()
-        if bottles:
+        if bottles := registry.list_bottles():
             first_bottle = bottles[0]
             bottle_name = first_bottle["name"]
 
@@ -194,7 +190,7 @@ class TestPhase2Integration:
 
         # Check that we get consistent information
         discovery_names = set(bottles_discovery.keys())
-        list_names = set(bottle["name"] for bottle in bottles_list)
+        list_names = {bottle["name"] for bottle in bottles_list}
 
         # Should have same bottles
         assert discovery_names == list_names

@@ -557,7 +557,7 @@ class TestEnterpriseFeatures:
         bottle_events = [
             e for e in events if e.event_type == AuditEventType.BOTTLE_EXECUTE
         ]
-        assert len(bottle_events) >= 1
+        assert bottle_events
 
     def test_log_file_access(self):
         """Test logging file access."""
@@ -571,7 +571,7 @@ class TestEnterpriseFeatures:
         # Check that event was logged
         events = self.enterprise.audit_logger.get_events()
         file_events = [e for e in events if e.event_type == AuditEventType.FILE_ACCESS]
-        assert len(file_events) >= 1
+        assert file_events
 
     def test_log_export_operation(self):
         """Test logging export operation."""
@@ -587,7 +587,7 @@ class TestEnterpriseFeatures:
         export_events = [
             e for e in events if e.event_type == AuditEventType.EXPORT_OPERATION
         ]
-        assert len(export_events) >= 1
+        assert export_events
 
     def test_log_analytics_access(self):
         """Test logging analytics access."""
@@ -603,7 +603,7 @@ class TestEnterpriseFeatures:
         analytics_events = [
             e for e in events if e.event_type == AuditEventType.ANALYTICS_ACCESS
         ]
-        assert len(analytics_events) >= 1
+        assert analytics_events
 
     def test_get_audit_report(self):
         """Test getting audit report."""
@@ -860,5 +860,5 @@ class TestEnterpriseIntegration:
 
         # Check that failed events have error messages
         failed_bottle_events = [e for e in bottle_events if not e.success]
-        assert len(failed_bottle_events) >= 1
+        assert failed_bottle_events
         assert failed_bottle_events[0].error_message is not None

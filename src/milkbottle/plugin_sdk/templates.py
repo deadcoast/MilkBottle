@@ -50,8 +50,7 @@ class PluginTemplate:
 
         for template_dir in self.templates_dir.iterdir():
             if template_dir.is_dir():
-                template_info = self._load_template_info(template_dir)
-                if template_info:
+                if template_info := self._load_template_info(template_dir):
                     templates.append(template_info)
 
         return templates

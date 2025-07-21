@@ -127,15 +127,19 @@ class IOOptimizer:
 
             suggestions = []
             if frequent_files:
-                suggestions.append(
-                    "Consider implementing file caching for frequently accessed files"
+                suggestions.extend(
+                    (
+                        "Consider implementing file caching for frequently accessed files",
+                        "Use memory-mapped files for large files",
+                    )
                 )
-                suggestions.append("Use memory-mapped files for large files")
-
             if self.io_stats.read_operations > 100:
-                suggestions.append("Consider batch reading operations")
-                suggestions.append("Implement read-ahead buffering")
-
+                suggestions.extend(
+                    (
+                        "Consider batch reading operations",
+                        "Implement read-ahead buffering",
+                    )
+                )
             if self.io_stats.write_operations > 100:
                 suggestions.extend(
                     (
@@ -259,9 +263,12 @@ class IOOptimizer:
                     )
                 )
             if not self.settings["enable_caching"]:
-                suggestions.append("Enable I/O caching for frequently accessed data")
-                suggestions.append("Implement file system caching")
-
+                suggestions.extend(
+                    (
+                        "Enable I/O caching for frequently accessed data",
+                        "Implement file system caching",
+                    )
+                )
             return {
                 "success": True,
                 "cache_effectiveness": cache_effectiveness,
@@ -289,9 +296,12 @@ class IOOptimizer:
                 )
             # Check compression ratios
             if self.io_stats.read_bytes > 100 * 1024 * 1024:  # 100MB
-                suggestions.append("Monitor compression ratios for large files")
-                suggestions.append("Consider adaptive compression based on file type")
-
+                suggestions.extend(
+                    (
+                        "Monitor compression ratios for large files",
+                        "Consider adaptive compression based on file type",
+                    )
+                )
             return {
                 "success": True,
                 "compression_enabled": self.settings["enable_compression"],
