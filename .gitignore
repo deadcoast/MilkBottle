@@ -3,20 +3,37 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+wheels/
+*.whl
 
 # Virtual Environment
 .venv/
 venv/
 ENV/
 env/
+virtualenv/
 
 # Testing and coverage
 .pytest_cache/
 .tox/
+.nox/
 .coverage
 .coverage.*
+.cache
 htmlcov/
 .pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.early.coverage
 
 # IDEs and Editors
 .idea/
@@ -24,6 +41,9 @@ htmlcov/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
 
 # OS generated files
 .DS_Store
@@ -33,55 +53,193 @@ htmlcov/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Project specific
-/.o3_sorter.egg-info/
-.early.coverage
 *.log
 *.tmp
 *.bak
 *.orig
+*.pid
+*.seed
+*.pid.lock
 
 # Local development settings
 .env
 .env.local
 .env.*.local
+.env.development
+.env.test
+.env.production
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
-# mypy
+# Type checking
 .mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
 
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Ruff
+.ruff_cache/
 
-# Project specific exclusions
-/benchmarks/
-/data/
-/logs/
+# Black
+.black_cache/
+
+# Sourcery
+.sourcery/
+
+# Documentation
+docs/_build/
+docs/build/
+site/
+
+# MilkBottle specific
+/exports/
+/uploads/
 /output/
 /tmp/
+/logs/
+/data/
+/benchmarks/
+/cache/
+/plugins/
+/plugin_cache/
 
-# Distribution / packaging
-.Python
-dist/
-eggs/
-.eggs/
+# PDF processing artifacts
+*.pdf.tmp
+*.pdf.cache
+*.pdf.log
+pdf_cache/
+grobid_cache/
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+# Font processing artifacts
+*.font.tmp
+*.font.cache
+font_cache/
+
+# Virtual environment artifacts
+.venvmilker.json
+requirements.lock
+*.venv/
+
+# Plugin development
+plugin_workspace/
+plugin_builds/
+plugin_dist/
+
+# Performance profiling
+*.prof
+*.profile
+profiling_data/
+performance_logs/
+
+# API and server
+api_cache/
+server_logs/
+*.pid
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Backup files
+*.backup
+*.old
+*.save
+
+# Temporary files
+temp/
+tmp/
+.tmp/
+
+# Local configuration
+local_config/
+config.local.*
+settings.local.*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Large files
+*.bin
+*.dat
+*.dump
+
+# Security
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# Monitoring and logging
+monitoring_data/
+metrics/
+telemetry/
+*.metrics
+
+# Machine learning models
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.onnx
+*.pt
+*.pth
+models/
+model_cache/
+
+# Data files
+*.csv
+*.json
+*.xml
+*.yaml
+*.yml
+data_files/
+datasets/
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Local development
+.local/
+local/
+dev/
+development/
