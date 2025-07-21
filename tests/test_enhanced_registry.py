@@ -224,23 +224,29 @@ class TestBottleRegistry:
             self.registry, "_discover_entrypoint_bottles", return_value={}
         ):
             with patch.object(self.registry, "_discover_local_bottles") as mock_local:
-                mock_local.return_value = {
-                    "test_bottle": {
-                        "name": "test_bottle",
-                        "has_standard_interface": True,
-                        "has_cli": True,
-                        "module": mock_module,
-                        "cli_loader": lambda: Mock(),
-                    }
-                }
+                self._extracted_from_test_health_check_all_bottles_15(
+                    mock_module, mock_local
+                )
 
-                result = self.registry.health_check()
+    # TODO Rename this here and in `test_health_check_all_bottles`
+    def _extracted_from_test_health_check_all_bottles_15(self, mock_module, mock_local):
+        mock_local.return_value = {
+            "test_bottle": {
+                "name": "test_bottle",
+                "has_standard_interface": True,
+                "has_cli": True,
+                "module": mock_module,
+                "cli_loader": lambda: Mock(),
+            }
+        }
 
-                assert "timestamp" in result
-                assert "overall_status" in result
-                assert "bottles" in result
-                assert "test_bottle" in result["bottles"]
-                assert result["overall_status"] == "healthy"
+        result = self.registry.health_check()
+
+        assert "timestamp" in result
+        assert "overall_status" in result
+        assert "bottles" in result
+        assert "test_bottle" in result["bottles"]
+        assert result["overall_status"] == "healthy"
 
     def test_health_check_specific_bottle(self):
         """Test health check for a specific bottle."""
@@ -256,23 +262,31 @@ class TestBottleRegistry:
             self.registry, "_discover_entrypoint_bottles", return_value={}
         ):
             with patch.object(self.registry, "_discover_local_bottles") as mock_local:
-                mock_local.return_value = {
-                    "test_bottle": {
-                        "name": "test_bottle",
-                        "has_standard_interface": True,
-                        "has_cli": True,
-                        "module": mock_module,
-                        "cli_loader": lambda: Mock(),
-                    }
-                }
+                self._extracted_from_test_health_check_specific_bottle_15(
+                    mock_module, mock_local
+                )
 
-                result = self.registry.health_check("test_bottle")
+    # TODO Rename this here and in `test_health_check_specific_bottle`
+    def _extracted_from_test_health_check_specific_bottle_15(
+        self, mock_module, mock_local
+    ):
+        mock_local.return_value = {
+            "test_bottle": {
+                "name": "test_bottle",
+                "has_standard_interface": True,
+                "has_cli": True,
+                "module": mock_module,
+                "cli_loader": lambda: Mock(),
+            }
+        }
 
-                assert "timestamp" in result
-                assert "overall_status" in result
-                assert "bottles" in result
-                assert "test_bottle" in result["bottles"]
-                assert result["bottles"]["test_bottle"]["status"] == "healthy"
+        result = self.registry.health_check("test_bottle")
+
+        assert "timestamp" in result
+        assert "overall_status" in result
+        assert "bottles" in result
+        assert "test_bottle" in result["bottles"]
+        assert result["bottles"]["test_bottle"]["status"] == "healthy"
 
     def test_health_check_bottle_not_found(self):
         """Test health check for a bottle that doesn't exist."""

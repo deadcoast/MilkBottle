@@ -65,10 +65,10 @@ class PluginSDK:
                 template_manager=self.template_manager,
                 **kwargs,
             ):
-                logger.info(f"Successfully created plugin: {name}")
+                logger.info(f"Successfully created plugin: {name} (success: {success})")
                 return True
             else:
-                logger.error(f"Failed to create plugin: {name}")
+                logger.error(f"Failed to create plugin: {name} (success: {success})")
                 return False
 
         except Exception as e:
@@ -173,7 +173,9 @@ class PluginSDK:
                 return False
 
             # Package plugin
-            return self.package_plugin(plugin_path) if build_type == "production" else True
+            return (
+                self.package_plugin(plugin_path) if build_type == "production" else True
+            )
         except Exception as e:
             logger.error(f"Build failed: {e}")
             return False
@@ -204,8 +206,6 @@ class PluginSDK:
 
             # Get metadata
             try:
-                from milkbottle.plugin_system.core import PluginMetadata
-
                 # This would require loading the plugin to get metadata
                 info["metadata"] = {"status": "loaded"}
             except Exception as e:

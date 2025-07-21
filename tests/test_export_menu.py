@@ -374,19 +374,23 @@ class TestExportOptionsMenu:
         content_data = {"title": "Test Document", "pages": [{"text": "content"}]}
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            output_dir = Path(temp_dir)
-            results = self.export_menu.execute_export(content_data, output_dir)
+            self._extracted_from_test_execute_export_16(temp_dir, content_data)
 
-            assert "txt" in results
-            assert "json" in results
-            assert not results["txt"].startswith("Error:")
-            assert not results["json"].startswith("Error:")
+    # TODO Rename this here and in `test_execute_export`
+    def _extracted_from_test_execute_export_16(self, temp_dir, content_data):
+        output_dir = Path(temp_dir)
+        results = self.export_menu.execute_export(content_data, output_dir)
 
-            # Check that files were created
-            txt_file = Path(results["txt"])
-            json_file = Path(results["json"])
-            assert txt_file.exists()
-            assert json_file.exists()
+        assert "txt" in results
+        assert "json" in results
+        assert not results["txt"].startswith("Error:")
+        assert not results["json"].startswith("Error:")
+
+        # Check that files were created
+        txt_file = Path(results["txt"])
+        json_file = Path(results["json"])
+        assert txt_file.exists()
+        assert json_file.exists()
 
 
 class TestExportFunctions:

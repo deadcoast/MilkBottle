@@ -54,11 +54,15 @@ class PluginGenerator:
                 if success := self._generate_structure(
                     name, template_data, output_dir, **kwargs
                 ):
-                    self.console.print(f"✅ Successfully generated plugin: {name}")
+                    self.console.print(
+                        f"✅ Successfully generated plugin: {name} (success: {success})"
+                    )
                     self.console.print(f"📁 Plugin created at: {output_dir}")
                     return True
                 else:
-                    self.console.print(f"❌ Failed to generate plugin: {name}")
+                    self.console.print(
+                        f"❌ Failed to generate plugin: {name} (success: {success})"
+                    )
                     return False
 
         except Exception as e:

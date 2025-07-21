@@ -273,6 +273,9 @@ class TestMilkBottleAPI:
         # Test successful request
         response = self.api._track_request(mock_request, mock_call_next)
 
+        # Verify response was returned successfully
+        assert response is not None
+
         assert self.api.stats["total_requests"] == 1
         assert self.api.stats["successful_requests"] == 1
         assert self.api.stats["failed_requests"] == 0

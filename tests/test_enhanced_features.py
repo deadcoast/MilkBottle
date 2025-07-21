@@ -84,20 +84,29 @@ class TestBatchProcessor:
             output_dir = Path(temp_dir)
             pdf_file = Path("test.pdf")
 
-            # Test markdown format
-            self.config.output_format = "markdown"
-            output_path = self.processor._get_output_path(pdf_file, output_dir)
-            assert output_path == output_dir / "test.md"
-
-            # Test HTML format
-            self.config.output_format = "html"
-            output_path = self.processor._get_output_path(pdf_file, output_dir)
+            output_path = self._extracted_from_test_get_output_path_8(
+                "markdown", pdf_file, output_dir, "test.md"
+            )
+            output_path = self._extracted_from_test_get_output_path_8(
+                "html", pdf_file, output_dir, "test.html"
+            )
+            # Verify HTML output path was generated
             assert output_path == output_dir / "test.html"
 
-            # Test JSON format
-            self.config.output_format = "json"
-            output_path = self.processor._get_output_path(pdf_file, output_dir)
+            output_path = self._extracted_from_test_get_output_path_8(
+                "json", pdf_file, output_dir, "test.json"
+            )
+            # Verify JSON output path was generated
             assert output_path == output_dir / "test.json"
+
+    # TODO Rename this here and in `test_get_output_path`
+    def _extracted_from_test_get_output_path_8(self, arg0, pdf_file, output_dir, arg3):
+        # Test markdown format
+        self.config.output_format = arg0
+        result = self.processor._get_output_path(pdf_file, output_dir)
+        assert result == output_dir / arg3
+
+        return result
 
     def test_cancel(self):
         """Test cancellation functionality."""
@@ -185,10 +194,7 @@ class TestFormatExporter:
 
             result = self.exporter._export_markdown(content, output_path)
 
-            assert result["content_length"] > 0
-            assert result["sections"] == 3
-            assert result["template_used"] == "default"
-            assert output_path.exists()
+            self._extracted_from_test_export_latex_13(result, 3, output_path)
 
     def test_export_html(self):
         """Test HTML export."""
@@ -198,10 +204,7 @@ class TestFormatExporter:
 
             result = self.exporter._export_html(content, output_path)
 
-            assert result["content_length"] > 0
-            assert result["sections"] == 2
-            assert result["template_used"] == "default"
-            assert output_path.exists()
+            self._extracted_from_test_export_latex_13(result, 2, output_path)
 
     def test_export_json(self):
         """Test JSON export."""
@@ -224,10 +227,14 @@ class TestFormatExporter:
 
             result = self.exporter._export_latex(content, output_path)
 
-            assert result["content_length"] > 0
-            assert result["sections"] == 2
-            assert result["template_used"] == "default"
-            assert output_path.exists()
+            self._extracted_from_test_export_latex_13(result, 2, output_path)
+
+    # TODO Rename this here and in `test_export_markdown`, `test_export_html` and `test_export_latex`
+    def _extracted_from_test_export_latex_13(self, result, arg1, output_path):
+        assert result["content_length"] > 0
+        assert result["sections"] == arg1
+        assert result["template_used"] == "default"
+        assert output_path.exists()
 
     def test_generate_markdown(self):
         """Test markdown content generation."""
@@ -369,24 +376,24 @@ class TestQualityAssessor:
 
     def test_assess_citation_accuracy(self):
         """Test citation accuracy assessment."""
-        # Test with good citations
-        good_citations = {
-            "references": [
-                "Smith, J. and Johnson, A. (2023) Title of Paper. Journal Name.",
-                "Brown, M. et al. (2022) Another Paper. Conference Proceedings.",
-            ]
-        }
-
-        score = self.assessor._assess_citation_accuracy(good_citations)
-        assert 0.0 <= score <= 1.0
+        score = self._extracted_from_test_assess_citation_accuracy_4(
+            "Smith, J. and Johnson, A. (2023) Title of Paper. Journal Name.",
+            "Brown, M. et al. (2022) Another Paper. Conference Proceedings.",
+        )
         assert score > 0.5
 
-        # Test with poor citations - the algorithm gives high scores even for poor citations
-        # because it checks for basic patterns that might still be present
-        poor_citations = {"references": ["Short", "Invalid citation"]}
+        score = self._extracted_from_test_assess_citation_accuracy_4(
+            "Short", "Invalid citation"
+        )
 
-        score = self.assessor._assess_citation_accuracy(poor_citations)
-        assert 0.0 <= score <= 1.0  # Just check it's a valid score
+    # TODO Rename this here and in `test_assess_citation_accuracy`
+    def _extracted_from_test_assess_citation_accuracy_4(self, arg0, arg1):
+        # Test with good citations
+        good_citations = {"references": [arg0, arg1]}
+
+        result = self.assessor._assess_citation_accuracy(good_citations)
+        assert 0.0 <= result <= 1.0
+        return result
 
     def test_calculate_overall_score(self):
         """Test overall score calculation."""
@@ -488,19 +495,9 @@ class TestQualityAssessor:
                 "references": ["Author, A. (2023) Title. Journal."],
             }
 
-            metrics = self.assessor.assess_extraction_quality(pdf_path, content)
-
-            assert isinstance(metrics, QualityMetrics)
-            assert 0.0 <= metrics.overall_score <= 1.0
-            assert metrics.confidence_level in [
-                "excellent",
-                "high",
-                "good",
-                "moderate",
-                "low",
-                "poor",
-            ]
-
+            self._extracted_from_test_assess_extraction_quality_error_17(
+                pdf_path, content
+            )
         finally:
             pdf_path.unlink()
 
@@ -514,21 +511,25 @@ class TestQualityAssessor:
             # Test with invalid content that would cause errors
             invalid_content = {}  # Empty dict instead of None
 
-            metrics = self.assessor.assess_extraction_quality(pdf_path, invalid_content)
-
-            assert isinstance(metrics, QualityMetrics)
-            assert 0.0 <= metrics.overall_score <= 1.0
-            assert metrics.confidence_level in [
-                "excellent",
-                "high",
-                "good",
-                "moderate",
-                "low",
-                "poor",
-            ]
-
+            self._extracted_from_test_assess_extraction_quality_error_17(
+                pdf_path, invalid_content
+            )
         finally:
             pdf_path.unlink()
+
+    # TODO Rename this here and in `test_assess_extraction_quality` and `test_assess_extraction_quality_error`
+    def _extracted_from_test_assess_extraction_quality_error_17(self, pdf_path, arg1):
+        metrics = self.assessor.assess_extraction_quality(pdf_path, arg1)
+        assert isinstance(metrics, QualityMetrics)
+        assert 0.0 <= metrics.overall_score <= 1.0
+        assert metrics.confidence_level in [
+            "excellent",
+            "high",
+            "good",
+            "moderate",
+            "low",
+            "poor",
+        ]
 
 
 class TestIntegration:
@@ -551,7 +552,7 @@ class TestIntegration:
         processor = BatchProcessor(config)
 
         # Test that they can work together
-        assert processor.config.quality_assessment == True
+        assert processor.config.quality_assessment
         assert assessor.quality_threshold == 0.7
 
     def test_end_to_end_workflow(self):

@@ -257,8 +257,8 @@ class FormatExporter:
             try:
                 import importlib.util
 
-                from docx import Document
-                from docx.enum.text import WD_ALIGN_PARAGRAPH
+                from docx import Document  # type: ignore
+                from docx.enum.text import WD_ALIGN_PARAGRAPH  # type: ignore
 
                 if not importlib.util.find_spec("docx.shared"):
                     raise ImportError("docx.shared module not available")

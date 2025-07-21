@@ -51,44 +51,48 @@ class TestPDFmilkerCoreFunctions:
 
         # Mock extraction
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
+            self._extracted_from_test_extract_function_12(mock_fitz, pdf_file)
 
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Test Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
+    # TODO Rename this here and in `test_extract_function`
+    def _extracted_from_test_extract_function_12(self, mock_fitz, pdf_file):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
 
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Test Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
 
-            # Test extraction
-            structured_content = extract_text_structured(pdf_file)
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
 
-            assert structured_content["raw_text"] == "Test Document"
-            assert len(structured_content["pages"]) == 1
+        # Test extraction
+        structured_content = extract_text_structured(pdf_file)
+
+        assert structured_content["raw_text"] == "Test Document"
+        assert len(structured_content["pages"]) == 1
 
     def test_transform_function(self, tmp_path):
         """Test pdf_to_markdown_structured function."""
@@ -260,41 +264,9 @@ class TestPDFmilkerWorkflow:
 
         # Step 3: Extract content
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Test Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_file)
-
+            structured_content = self._extracted_from_test_complete_workflow_22(
+                mock_fitz, pdf_file
+            )
         # Step 4: Transform to Markdown
         markdown_content = pdf_to_markdown_structured(structured_content)
 
@@ -326,6 +298,7 @@ class TestPDFmilkerWorkflow:
             "relocated_path": str(relocated_path) if relocated_path else None,
             "assets_valid": all(assets_valid.values()),
             "hash_valid": hash_valid,
+            "markdown_content_length": len(markdown_content) if markdown_content else 0,
             "status": (
                 "success"
                 if relocated_path and all(assets_valid.values()) and hash_valid
@@ -341,6 +314,43 @@ class TestPDFmilkerWorkflow:
         assert relocated_path.exists()
         assert pdf_hash is not None
         assert len(structured_content["pages"]) == 1
+
+    # TODO Rename this here and in `test_complete_workflow`
+    def _extracted_from_test_complete_workflow_22(self, mock_fitz, pdf_file):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Test Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        return extract_text_structured(pdf_file)
 
     def test_workflow_with_errors(self, tmp_path):
         """Test workflow with error handling."""
@@ -405,6 +415,8 @@ class TestPDFmilkerErrorHandling:
         """Test discover_pdfs with nonexistent directory."""
         discovered_pdfs = discover_pdfs(Path("/nonexistent/directory"))
         assert discovered_pdfs == []
+        # Verify that the discovery result is empty for debugging
+        assert len(discovered_pdfs) == 0
 
     def test_extract_nonexistent_file(self):
         """Test extract_text_structured with nonexistent file."""
@@ -456,46 +468,56 @@ class TestPDFmilkerLogging:
         # Test discovery logging
         discovered_pdfs = discover_pdfs(source_dir)
 
+        # Verify discovery results for debugging
+        assert len(discovered_pdfs) == 1
+        assert pdf_file in discovered_pdfs
+
         # Test extraction logging
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Test Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_file)
-
+            self._extracted_from_test_logging_output_16(mock_fitz, pdf_file)
         # Verify logging messages
         log_messages = [record.message for record in caplog.records]
 
         # Should have discovery and extraction messages
         assert any("discovered" in msg.lower() for msg in log_messages)
         assert any("extracted" in msg.lower() for msg in log_messages)
+
+    # TODO Rename this here and in `test_logging_output`
+    def _extracted_from_test_logging_output_16(self, mock_fitz, pdf_file):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Test Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        structured_content = extract_text_structured(pdf_file)
+        # Verify that structured content was extracted for debugging
+        assert structured_content is not None
+        assert "pages" in structured_content

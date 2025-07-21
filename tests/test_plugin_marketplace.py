@@ -239,6 +239,10 @@ class TestPluginSecurity:
         # First scan the plugin
         scan_result = await security.scan_plugin("test-plugin", "/tmp/test_plugin")
 
+        # Verify scan was completed successfully
+        assert scan_result is not None
+        assert scan_result.passed is True
+
         # Then retrieve the result
         result = await security.get_scan_result("test-plugin")
         assert result is not None

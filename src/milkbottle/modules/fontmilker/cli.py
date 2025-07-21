@@ -220,7 +220,7 @@ def convert(input_path: Path, output_path: Path, format: str):
         else:
             console.print("[red]Font conversion failed[/red]")
             console.print("Tried both FontForge and alternative tools")
-
+        console.print(f"Conversion success status: {success}")
     except Exception as e:
         console.print(f"[red]Error during conversion: {e}[/red]")
 

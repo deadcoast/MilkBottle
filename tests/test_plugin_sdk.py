@@ -210,16 +210,24 @@ class TestPluginSDK:
             with patch(
                 "milkbottle.plugin_sdk.testing.PluginTester.test_plugin"
             ) as mock_test:
-                mock_validate.return_value = {"valid": True}
-                mock_test.return_value = {"success": True}
+                self._extracted_from_test_get_plugin_info_12(
+                    mock_validate, mock_test, sdk, plugin_path
+                )
 
-                result = sdk.get_plugin_info(plugin_path)
+    # TODO Rename this here and in `test_get_plugin_info`
+    def _extracted_from_test_get_plugin_info_12(
+        self, mock_validate, mock_test, sdk, plugin_path
+    ):
+        mock_validate.return_value = {"valid": True}
+        mock_test.return_value = {"success": True}
 
-                assert result["path"] == str(plugin_path)
-                assert result["exists"] is False
-                assert "validation" in result
-                assert "tests" in result
-                assert "metadata" in result
+        result = sdk.get_plugin_info(plugin_path)
+
+        assert result["path"] == str(plugin_path)
+        assert result["exists"] is False
+        assert "validation" in result
+        assert "tests" in result
+        assert "metadata" in result
 
 
 class TestPluginTemplate:

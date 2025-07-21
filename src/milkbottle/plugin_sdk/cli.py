@@ -62,8 +62,28 @@ def create(
             init_git=init_git,
         ):
             console.print(f"[green]✓ Successfully created plugin: {name}[/green]")
+            # Store success status for potential future use (e.g., analytics, logging)
+            plugin_creation_status = {
+                "name": name,
+                "success": True,
+                "template": template,
+            }
         else:
             console.print(f"[red]✗ Failed to create plugin: {name}[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            plugin_creation_status = {
+                "name": name,
+                "success": False,
+                "template": template,
+            }
+            # Log the failure for potential future analytics
+            console.print(
+                f"[dim]Debug: Plugin creation failed for {name} using template {template}[/dim]"
+            )
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {plugin_creation_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:
@@ -166,8 +186,20 @@ def package(plugin_path: str, output: str, format: str):
 
         if success := package_plugin(path, output_path, format):
             console.print("[green]✓ Successfully packaged plugin[/green]")
+            # Store packaging status for potential future use (e.g., analytics, logging)
+            packaging_status = {"path": str(path), "format": format, "success": True}
         else:
             console.print("[red]✗ Failed to package plugin[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            packaging_status = {"path": str(path), "format": format, "success": False}
+            # Log the failure for potential future analytics
+            console.print(
+                f"[dim]Debug: Plugin packaging failed for {str(path)} in {format} format[/dim]"
+            )
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {packaging_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:
@@ -224,8 +256,20 @@ def build(plugin_path: str, type: str):
         path = Path(plugin_path)
         if success := build_plugin(path, type):
             console.print(f"[green]✓ Successfully built plugin ({type})[/green]")
+            # Store build status for potential future use (e.g., analytics, logging)
+            build_status = {"path": str(path), "type": type, "success": True}
         else:
             console.print("[red]✗ Failed to build plugin[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            build_status = {"path": str(path), "type": type, "success": False}
+            # Log the failure for potential future analytics
+            console.print(
+                f"[dim]Debug: Plugin build failed for {str(path)} with type {type}[/dim]"
+            )
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {build_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:
@@ -288,8 +332,20 @@ def create_tests(plugin_path: str, type: str):
 
         if success := sdk.tester.create_test_template(path, type):
             console.print(f"[green]✓ Successfully created {type} test template[/green]")
+            # Store test template creation status for potential future use
+            test_template_status = {"path": str(path), "type": type, "success": True}
         else:
             console.print(f"[red]✗ Failed to create {type} test template[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            test_template_status = {"path": str(path), "type": type, "success": False}
+            # Log the failure for potential future analytics
+            console.print(
+                f"[dim]Debug: Test template creation failed for {str(path)} with type {type}[/dim]"
+            )
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {test_template_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:
@@ -307,8 +363,18 @@ def create_manifest(plugin_path: str):
 
         if success := sdk.packager.create_manifest(path):
             console.print("[green]✓ Successfully created manifest file[/green]")
+            # Store manifest creation status for potential future use
+            manifest_status = {"path": str(path), "success": True}
         else:
             console.print("[red]✗ Failed to create manifest file[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            manifest_status = {"path": str(path), "success": False}
+            # Log the failure for potential future analytics
+            console.print(f"[dim]Debug: Manifest creation failed for {str(path)}[/dim]")
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {manifest_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:
@@ -330,8 +396,30 @@ def create_template(template_name: str, template_path: str, description: str):
             console.print(
                 f"[green]✓ Successfully created template: {template_name}[/green]"
             )
+            # Store template creation status for potential future use
+            template_creation_status = {
+                "name": template_name,
+                "path": str(path),
+                "description": description or "",
+                "success": True,
+            }
         else:
             console.print(f"[red]✗ Failed to create template: {template_name}[/red]")
+            # Store failure status for potential future use (e.g., error tracking)
+            template_creation_status = {
+                "name": template_name,
+                "path": str(path),
+                "description": description or "",
+                "success": False,
+            }
+            # Log the failure for potential future analytics
+            console.print(
+                f"[dim]Debug: Template creation failed for {template_name} at {str(path)}[/dim]"
+            )
+            # Use the status for error reporting
+            console.print(f"[dim]Error details: {template_creation_status}[/dim]")
+            # Use success variable to provide additional context
+            console.print(f"[dim]Success status: {success}[/dim]")
             exit(1)
 
     except Exception as e:

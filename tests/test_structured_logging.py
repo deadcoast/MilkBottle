@@ -42,16 +42,20 @@ class TestPDFmilkerStructuredLogger:
 
             # Read and parse log entries
             with logger.log_file.open("r", encoding="utf-8") as f:
-                lines = f.readlines()
-                assert len(lines) == 1
+                self._extracted_from_test_info_logging_15(f, slug, logger)
 
-                log_entry = json.loads(lines[0])
-                assert log_entry["level"] == "info"
-                assert log_entry["message"] == "Test info message"
-                assert log_entry["logger"] == "pdfmilker"
-                assert log_entry["slug"] == slug
-                assert log_entry["correlation_id"] == logger.correlation_id
-                assert log_entry["data"]["extra_data"] == "test_value"
+    # TODO Rename this here and in `test_info_logging`
+    def _extracted_from_test_info_logging_15(self, f, slug, logger):
+        lines = f.readlines()
+        assert len(lines) == 1
+
+        log_entry = json.loads(lines[0])
+        assert log_entry["level"] == "info"
+        assert log_entry["message"] == "Test info message"
+        assert log_entry["logger"] == "pdfmilker"
+        assert log_entry["slug"] == slug
+        assert log_entry["correlation_id"] == logger.correlation_id
+        assert log_entry["data"]["extra_data"] == "test_value"
 
     def test_warning_logging(self):
         """Test warning level logging."""
@@ -105,12 +109,16 @@ class TestPDFmilkerStructuredLogger:
             logger.log_pipeline_step("extract", "started", pdf_path="/test/file.pdf")
 
             with logger.log_file.open("r", encoding="utf-8") as f:
-                log_entry = json.loads(f.readline())
-                assert log_entry["level"] == "info"
-                assert "Pipeline step: extract - started" in log_entry["message"]
-                assert log_entry["data"]["step"] == "extract"
-                assert log_entry["data"]["status"] == "started"
-                assert log_entry["data"]["pdf_path"] == "/test/file.pdf"
+                self._extracted_from_test_pipeline_step_logging_11(f)
+
+    # TODO Rename this here and in `test_pipeline_step_logging`
+    def _extracted_from_test_pipeline_step_logging_11(self, f):
+        log_entry = json.loads(f.readline())
+        assert log_entry["level"] == "info"
+        assert "Pipeline step: extract - started" in log_entry["message"]
+        assert log_entry["data"]["step"] == "extract"
+        assert log_entry["data"]["status"] == "started"
+        assert log_entry["data"]["pdf_path"] == "/test/file.pdf"
 
     def test_extraction_result_logging(self):
         """Test extraction result logging."""
@@ -132,14 +140,18 @@ class TestPDFmilkerStructuredLogger:
             logger.log_extraction_result(result)
 
             with logger.log_file.open("r", encoding="utf-8") as f:
-                log_entry = json.loads(f.readline())
-                assert log_entry["message"] == "Extraction completed"
-                assert log_entry["data"]["extraction_method"] == "grobid"
-                assert log_entry["data"]["content_length"] == 1500
-                assert log_entry["data"]["success"] is True
-                assert log_entry["data"]["processing_time"] == 2.5
-                assert log_entry["data"]["metadata"]["title"] == "Test Paper"
-                assert log_entry["data"]["quality_score"] == 0.85
+                self._extracted_from_test_extraction_result_logging_21(f)
+
+    # TODO Rename this here and in `test_extraction_result_logging`
+    def _extracted_from_test_extraction_result_logging_21(self, f):
+        log_entry = json.loads(f.readline())
+        assert log_entry["message"] == "Extraction completed"
+        assert log_entry["data"]["extraction_method"] == "grobid"
+        assert log_entry["data"]["content_length"] == 1500
+        assert log_entry["data"]["success"] is True
+        assert log_entry["data"]["processing_time"] == 2.5
+        assert log_entry["data"]["metadata"]["title"] == "Test Paper"
+        assert log_entry["data"]["quality_score"] == 0.85
 
     def test_error_with_context_logging(self):
         """Test error logging with context."""
@@ -155,13 +167,17 @@ class TestPDFmilkerStructuredLogger:
             logger.log_error_with_context(error, context)
 
             with logger.log_file.open("r", encoding="utf-8") as f:
-                log_entry = json.loads(f.readline())
-                assert log_entry["level"] == "error"
-                assert "Error occurred: Test error" in log_entry["message"]
-                assert log_entry["data"]["error_type"] == "ValueError"
-                assert log_entry["data"]["error_message"] == "Test error"
-                assert log_entry["data"]["context"]["pdf_path"] == "/test/file.pdf"
-                assert log_entry["data"]["context"]["step"] == "extract"
+                self._extracted_from_test_error_with_context_logging_15(f)
+
+    # TODO Rename this here and in `test_error_with_context_logging`
+    def _extracted_from_test_error_with_context_logging_15(self, f):
+        log_entry = json.loads(f.readline())
+        assert log_entry["level"] == "error"
+        assert "Error occurred: Test error" in log_entry["message"]
+        assert log_entry["data"]["error_type"] == "ValueError"
+        assert log_entry["data"]["error_message"] == "Test error"
+        assert log_entry["data"]["context"]["pdf_path"] == "/test/file.pdf"
+        assert log_entry["data"]["context"]["step"] == "extract"
 
     def test_batch_summary_logging(self):
         """Test batch summary logging."""
@@ -176,14 +192,18 @@ class TestPDFmilkerStructuredLogger:
             )
 
             with logger.log_file.open("r", encoding="utf-8") as f:
-                log_entry = json.loads(f.readline())
-                assert log_entry["message"] == "Batch processing completed"
-                assert log_entry["data"]["total_files"] == 10
-                assert log_entry["data"]["successful_files"] == 8
-                assert log_entry["data"]["failed_files"] == 1
-                assert log_entry["data"]["skipped_files"] == 1
-                assert log_entry["data"]["processing_time"] == 15.5
-                assert log_entry["data"]["success_rate"] == 80.0
+                self._extracted_from_test_batch_summary_logging_14(f)
+
+    # TODO Rename this here and in `test_batch_summary_logging`
+    def _extracted_from_test_batch_summary_logging_14(self, f):
+        log_entry = json.loads(f.readline())
+        assert log_entry["message"] == "Batch processing completed"
+        assert log_entry["data"]["total_files"] == 10
+        assert log_entry["data"]["successful_files"] == 8
+        assert log_entry["data"]["failed_files"] == 1
+        assert log_entry["data"]["skipped_files"] == 1
+        assert log_entry["data"]["processing_time"] == 15.5
+        assert log_entry["data"]["success_rate"] == 80.0
 
     def test_get_recent_logs(self):
         """Test getting recent logs."""
@@ -253,13 +273,17 @@ class TestPDFmilkerStructuredLogger:
 
             # Check all entries are present
             with logger.log_file.open("r", encoding="utf-8") as f:
-                lines = f.readlines()
-                assert len(lines) == 3
+                self._extracted_from_test_log_file_append_mode_16(f)
 
-                entries = [json.loads(line) for line in lines]
-                assert entries[0]["message"] == "First entry"
-                assert entries[1]["message"] == "Second entry"
-                assert entries[2]["message"] == "Third entry"
+    # TODO Rename this here and in `test_log_file_append_mode`
+    def _extracted_from_test_log_file_append_mode_16(self, f):
+        lines = f.readlines()
+        assert len(lines) == 3
+
+        entries = [json.loads(line) for line in lines]
+        assert entries[0]["message"] == "First entry"
+        assert entries[1]["message"] == "Second entry"
+        assert entries[2]["message"] == "Third entry"
 
     def test_timestamp_format(self):
         """Test that timestamps are in ISO format."""

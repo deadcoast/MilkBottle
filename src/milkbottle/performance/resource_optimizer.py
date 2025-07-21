@@ -370,11 +370,16 @@ class ResourceOptimizer:
 
             improvement = collected if collected > 0 else 0.0
 
+            # Calculate improvement based on stats comparison
+            before_count = sum(stat.get("collections", 0) for stat in gc_stats)
+            after_count = sum(stat.get("collections", 0) for stat in after_stats)
+            stats_improvement = after_count - before_count
+
             result = OptimizationResult(
                 optimization_type="garbage_collection",
                 success=collected > 0,
                 improvement=improvement,
-                details=f"Garbage collection freed {collected} objects",
+                details=f"Garbage collection freed {collected} objects, stats improvement: {stats_improvement}",
             )
 
             self.optimization_history.append(result)

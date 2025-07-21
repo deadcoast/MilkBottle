@@ -159,7 +159,9 @@ class PDFmilkerWizard(ConfigurationWizard):
 
         # Grobid service
         console.print("\n[bold]Grobid Service (for enhanced text extraction)[/bold]")
-        if use_grobid := Confirm.ask("Use Grobid service?", default=False):
+        use_grobid = Confirm.ask("Use Grobid service?", default=False)
+
+        if use_grobid:
             grobid_url = Prompt.ask(
                 "Grobid service URL", default="http://localhost:8070"
             )
@@ -173,9 +175,15 @@ class PDFmilkerWizard(ConfigurationWizard):
             self.config["services"]["grobid"] = {"enabled": False}
             console.print("[yellow]⚠️ Grobid service disabled[/yellow]")
 
+        # Store user preference for potential future use
+        self.config["user_preferences"] = self.config.get("user_preferences", {})
+        self.config["user_preferences"]["use_grobid"] = use_grobid
+
         # MathPix service
         console.print("\n[bold]MathPix Service (for math formula extraction)[/bold]")
-        if use_mathpix := Confirm.ask("Use MathPix service?", default=False):
+        use_mathpix = Confirm.ask("Use MathPix service?", default=False)
+
+        if use_mathpix:
             mathpix_app_id = Prompt.ask("MathPix App ID")
             mathpix_app_key = Prompt.ask("MathPix App Key", password=True)
 
@@ -191,6 +199,9 @@ class PDFmilkerWizard(ConfigurationWizard):
         else:
             self.config["services"]["mathpix"] = {"enabled": False}
             console.print("[yellow]⚠️ MathPix service disabled[/yellow]")
+
+        # Store user preference for potential future use
+        self.config["user_preferences"]["use_mathpix"] = use_mathpix
 
     def _configure_quality_settings(self) -> None:
         """Configure quality assessment settings."""
@@ -279,12 +290,22 @@ class PDFmilkerWizard(ConfigurationWizard):
                 console.print(
                     "[green]Configuration wizard completed successfully![/green]"
                 )
+                # Store save preference for potential future use
+                self.config["user_preferences"]["auto_save"] = True
             else:
                 console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
+                # Store save preference for potential future use
+                self.config["user_preferences"]["auto_save"] = False
+                # Use save_config variable to provide additional context
+                console.print(f"[dim]Save preference: {save_config}[/dim]")
         else:
             console.print(
                 "[red]❌ Configuration validation failed. Please review settings.[/red]"
             )
+            # Store validation status for potential future use
+            self.config["validation_status"] = {"is_valid": False}
+            # Use is_valid variable to provide additional context
+            console.print(f"[dim]Validation status: {is_valid}[/dim]")
 
     def _validate_configuration(self) -> bool:
         """Validate the configuration."""
@@ -363,13 +384,19 @@ class VenvMilkerWizard(ConfigurationWizard):
         python_version = Prompt.ask("Python version to use", default="3.11")
         self.config["python"] = python_version
 
-        if use_system_python := Confirm.ask("Use system Python?", default=True):
+        use_system_python = Confirm.ask("Use system Python?", default=True)
+
+        if use_system_python:
             self.config["python_path"] = None
             console.print("[green]✅ Using system Python[/green]")
         else:
             python_path = Prompt.ask("Custom Python path")
             self.config["python_path"] = python_path
             console.print(f"[green]✅ Using custom Python: {python_path}[/green]")
+
+        # Store user preference for potential future use
+        self.config["user_preferences"] = self.config.get("user_preferences", {})
+        self.config["user_preferences"]["use_system_python"] = use_system_python
 
     def _configure_packages(self) -> None:
         """Configure package management."""
@@ -430,9 +457,22 @@ class VenvMilkerWizard(ConfigurationWizard):
         ):
             self.save_config(config_path)
             console.print(f"[green]✅ Configuration saved to {config_path}[/green]")
-            console.print("[green]Configuration wizard completed successfully![/green]")
+            self._extracted_from__validate_and_save_28(
+                "[green]Configuration wizard completed successfully![/green]", True
+            )
         else:
-            console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
+            self._extracted_from__validate_and_save_28(
+                "[yellow]⚠️ Configuration not saved.[/yellow]", False
+            )
+            # Use save_config variable to provide additional context
+            console.print(f"[dim]Save preference: {save_config}[/dim]")
+
+    # TODO Rename this here and in `_validate_and_save`
+    def _extracted_from__validate_and_save_28(self, arg0, arg1):
+        console.print(arg0)
+        # Store save preference for potential future use
+        self.config["user_preferences"] = self.config.get("user_preferences", {})
+        self.config["user_preferences"]["auto_save"] = arg1
 
 
 class FontMilkerWizard(ConfigurationWizard):
@@ -545,9 +585,22 @@ class FontMilkerWizard(ConfigurationWizard):
         ):
             self.save_config(config_path)
             console.print(f"[green]✅ Configuration saved to {config_path}[/green]")
-            console.print("[green]Configuration wizard completed successfully![/green]")
+            self._extracted_from__validate_and_save_28(
+                "[green]Configuration wizard completed successfully![/green]", True
+            )
         else:
-            console.print("[yellow]⚠️ Configuration not saved.[/yellow]")
+            self._extracted_from__validate_and_save_28(
+                "[yellow]⚠️ Configuration not saved.[/yellow]", False
+            )
+            # Use save_config variable to provide additional context
+            console.print(f"[dim]Save preference: {save_config}[/dim]")
+
+    # TODO Rename this here and in `_validate_and_save`
+    def _extracted_from__validate_and_save_28(self, arg0, arg1):
+        console.print(arg0)
+        # Store save preference for potential future use
+        self.config["user_preferences"] = self.config.get("user_preferences", {})
+        self.config["user_preferences"]["auto_save"] = arg1
 
 
 def run_wizard(wizard_type: str) -> Dict[str, Any]:

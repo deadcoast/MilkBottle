@@ -18,14 +18,12 @@ class TestValidateAssets:
         markdown_file.parent.mkdir()
         markdown_file.write_text("# Test Document")
 
-        image_file = tmp_path / "images" / "figure1.png"
-        image_file.parent.mkdir()
-        image_file.write_bytes(b"fake image data")
-
-        pdf_file = tmp_path / "pdf" / "document.pdf"
-        pdf_file.parent.mkdir()
-        pdf_file.write_bytes(b"fake pdf data")
-
+        image_file = self._extracted_from_test_validate_assets_all_exist_8(
+            tmp_path, "images", "figure1.png", b"fake image data"
+        )
+        pdf_file = self._extracted_from_test_validate_assets_all_exist_8(
+            tmp_path, "pdf", "document.pdf", b"fake pdf data"
+        )
         asset_paths = {
             "markdown": [markdown_file],
             "images": [image_file],
@@ -37,6 +35,16 @@ class TestValidateAssets:
         assert result["markdown"] is True
         assert result["images"] is True
         assert result["pdf"] is True
+
+    # TODO Rename this here and in `test_validate_assets_all_exist`
+    def _extracted_from_test_validate_assets_all_exist_8(
+        self, tmp_path, arg1, arg2, arg3
+    ):
+        result = tmp_path / arg1 / arg2
+        result.parent.mkdir()
+        result.write_bytes(arg3)
+
+        return result
 
     def test_validate_assets_some_missing(self, tmp_path):
         """Test validation when some assets are missing."""
@@ -326,15 +334,12 @@ class TestValidateIntegration:
         markdown_file.parent.mkdir()
         markdown_file.write_text("# Test Document")
 
-        image_file = tmp_path / "images" / "figure1.png"
-        image_file.parent.mkdir()
-        image_file.write_bytes(b"fake image data")
-
-        pdf_file = tmp_path / "pdf" / "document.pdf"
-        pdf_file.parent.mkdir()
-        pdf_content = b"test pdf content for hashing"
-        pdf_file.write_bytes(pdf_content)
-
+        image_file = self._extracted_from_test_full_validation_workflow_8(
+            tmp_path, "images", "figure1.png", b"fake image data"
+        )
+        pdf_file = self._extracted_from_test_full_validation_workflow_8(
+            tmp_path, "pdf", "document.pdf", b"test pdf content for hashing"
+        )
         # Test asset validation
         asset_paths = {
             "markdown": [markdown_file],
@@ -357,6 +362,16 @@ class TestValidateIntegration:
         assert asset_results["images"] is True
         assert asset_results["pdf"] is True
         assert hash_result is True
+
+    # TODO Rename this here and in `test_full_validation_workflow`
+    def _extracted_from_test_full_validation_workflow_8(
+        self, tmp_path, arg1, arg2, arg3
+    ):
+        result = tmp_path / arg1 / arg2
+        result.parent.mkdir()
+        result.write_bytes(arg3)
+
+        return result
 
     def test_validation_with_missing_assets(self, tmp_path):
         """Test validation workflow with some missing assets."""

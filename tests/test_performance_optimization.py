@@ -72,11 +72,7 @@ class TestCacheManager:
         """Test LRU eviction when cache is full."""
         cache = CacheManager(max_size=2)
 
-        # Fill cache
-        cache.set("key1", "value1")
-        cache.set("key2", "value2")
-        assert len(cache.cache) == 2
-
+        self._extracted_from_test_cache_clear_6(cache)
         # Add third item, should evict first
         cache.set("key3", "value3")
         assert len(cache.cache) == 2
@@ -87,12 +83,15 @@ class TestCacheManager:
     def test_cache_clear(self):
         """Test cache clearing."""
         cache = CacheManager()
-        cache.set("key1", "value1")
-        cache.set("key2", "value2")
-
-        assert len(cache.cache) == 2
+        self._extracted_from_test_cache_clear_6(cache)
         cache.clear()
         assert len(cache.cache) == 0
+
+    # TODO Rename this here and in `test_cache_lru_eviction` and `test_cache_clear`
+    def _extracted_from_test_cache_clear_6(self, cache):
+        cache.set("key1", "value1")
+        cache.set("key2", "value2")
+        assert len(cache.cache) == 2
 
     def test_cache_stats(self):
         """Test cache statistics."""
@@ -125,7 +124,7 @@ class TestPerformanceMonitor:
     def test_performance_monitor_initialization(self):
         """Test performance monitor initialization."""
         monitor = PerformanceMonitor()
-        assert monitor.monitoring == False
+        assert not monitor.monitoring
         assert len(monitor.metrics_history) == 0
 
     def test_get_current_metrics(self):
@@ -179,7 +178,7 @@ class TestParallelProcessor:
         """Test parallel processor initialization."""
         processor = ParallelProcessor(max_workers=4)
         assert processor.max_workers == 4
-        assert processor.use_processes == False
+        assert not processor.use_processes
 
     def test_parallel_execution(self):
         """Test parallel execution."""
@@ -288,8 +287,8 @@ class TestPerformanceProfiler:
     def test_performance_profiler_initialization(self):
         """Test performance profiler initialization."""
         profiler = PerformanceProfiler()
-        assert profiler.enable_memory_profiling == True
-        assert profiler.enable_cpu_profiling == True
+        assert profiler.enable_memory_profiling
+        assert profiler.enable_cpu_profiling
 
     def test_profile_function(self):
         """Test function profiling."""
@@ -357,7 +356,7 @@ class TestMemoryOptimizer:
     def test_memory_optimizer_initialization(self):
         """Test memory optimizer initialization."""
         optimizer = MemoryOptimizer()
-        assert optimizer.enable_tracemalloc == True
+        assert optimizer.enable_tracemalloc
         assert optimizer.leak_threshold_mb == 10.0
 
     def test_get_memory_stats(self):
@@ -421,11 +420,7 @@ class TestIOOptimizer:
 
     def test_record_file_operations(self):
         """Test recording file operations."""
-        optimizer = IOOptimizer()
-
-        optimizer.record_file_read("test.txt", 1024, 0.1)
-        optimizer.record_file_write("test.txt", 512, 0.05)
-
+        optimizer = self._extracted_from_test_optimize_3()
         stats = optimizer.get_io_stats()
         assert stats.read_bytes == 1024
         assert stats.write_bytes == 512
@@ -434,18 +429,20 @@ class TestIOOptimizer:
 
     def test_optimize(self):
         """Test I/O optimization."""
-        optimizer = IOOptimizer()
-
-        # Record some operations first
-        optimizer.record_file_read("test.txt", 1024, 0.1)
-        optimizer.record_file_write("test.txt", 512, 0.05)
-
+        optimizer = self._extracted_from_test_optimize_3()
         result = optimizer.optimize()
 
         assert "file_io" in result
         assert "network_io" in result
         assert "buffers" in result
         assert "caching" in result
+
+    # TODO Rename this here and in `test_record_file_operations` and `test_optimize`
+    def _extracted_from_test_optimize_3(self):
+        result = IOOptimizer()
+        result.record_file_read("test.txt", 1024, 0.1)
+        result.record_file_write("test.txt", 512, 0.05)
+        return result
 
     def test_get_io_report(self):
         """Test getting I/O report."""

@@ -233,7 +233,16 @@ def parallel(
             return
 
         # Execute in parallel
-        results = parallel_execute(func, items_list, max_workers=workers)
+        if function_args or function_kwargs:
+            # Use the parsed arguments if provided
+            results = parallel_execute(
+                lambda item: func(item, *function_args, **function_kwargs),
+                items_list,
+                max_workers=workers,
+            )
+        else:
+            # Execute without additional arguments
+            results = parallel_execute(func, items_list, max_workers=workers)
 
         display_parallel_results(results)
 

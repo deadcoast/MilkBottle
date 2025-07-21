@@ -264,25 +264,33 @@ class TestPrintReport:
             mock_console_class.return_value = mock_console
 
             with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
-
-                print_report(report_data)
-
-                # Verify console and table were created
-                mock_console_class.assert_called_once()
-                mock_table_class.assert_called_once_with(
-                    title="PDFmilker Extraction Report", show_lines=True
+                self._extracted_from_test_print_report_basic_15(
+                    mock_table_class, report_data, mock_console_class, mock_console
                 )
 
-                # Verify table columns were added
-                assert mock_table.add_column.call_count == 2
+    # TODO Rename this here and in `test_print_report_basic`
+    def _extracted_from_test_print_report_basic_15(
+        self, mock_table_class, report_data, mock_console_class, mock_console
+    ):
+        mock_table = Mock()
+        mock_table_class.return_value = mock_table
 
-                # Verify table rows were added
-                assert mock_table.add_row.call_count == 4
+        print_report(report_data)
 
-                # Verify table was printed
-                mock_console.print.assert_called_once_with(mock_table)
+        # Verify console and table were created
+        mock_console_class.assert_called_once()
+        mock_table_class.assert_called_once_with(
+            title="PDFmilker Extraction Report", show_lines=True
+        )
+
+        # Verify table columns were added
+        assert mock_table.add_column.call_count == 2
+
+        # Verify table rows were added
+        assert mock_table.add_row.call_count == 4
+
+        # Verify table was printed
+        mock_console.print.assert_called_once_with(mock_table)
 
     def test_print_report_complex_data(self):
         """Test report printing with complex data."""
@@ -316,15 +324,23 @@ class TestPrintReport:
             mock_console_class.return_value = mock_console
 
             with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
+                self._extracted_from_test_print_report_empty_data_10(
+                    mock_table_class, report_data, mock_console
+                )
 
-                print_report(report_data)
+    # TODO Rename this here and in `test_print_report_empty_data`
+    def _extracted_from_test_print_report_empty_data_10(
+        self, mock_table_class, report_data, mock_console
+    ):
+        mock_table = Mock()
+        mock_table_class.return_value = mock_table
 
-                # Verify table was created but no rows added
-                mock_table_class.assert_called_once()
-                assert mock_table.add_row.call_count == 0
-                mock_console.print.assert_called_once_with(mock_table)
+        print_report(report_data)
+
+        # Verify table was created but no rows added
+        mock_table_class.assert_called_once()
+        assert mock_table.add_row.call_count == 0
+        mock_console.print.assert_called_once_with(mock_table)
 
     def test_print_report_unicode_content(self):
         """Test report printing with Unicode content."""
@@ -336,18 +352,9 @@ class TestPrintReport:
         }
 
         with patch("milkbottle.modules.pdfmilker.report.Console") as mock_console_class:
-            mock_console = Mock()
-            mock_console_class.return_value = mock_console
-
-            with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
-
-                print_report(report_data)
-
-                # Verify table rows were added
-                assert mock_table.add_row.call_count == 4
-                mock_console.print.assert_called_once_with(mock_table)
+            self._extracted_from_test_print_report_special_characters_11(
+                mock_console_class, report_data, 4
+            )
 
     def test_print_report_nested_objects(self):
         """Test report printing with nested objects."""
@@ -359,18 +366,9 @@ class TestPrintReport:
         }
 
         with patch("milkbottle.modules.pdfmilker.report.Console") as mock_console_class:
-            mock_console = Mock()
-            mock_console_class.return_value = mock_console
-
-            with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
-
-                print_report(report_data)
-
-                # Verify table rows were added (nested objects will be converted to strings)
-                assert mock_table.add_row.call_count == 4
-                mock_console.print.assert_called_once_with(mock_table)
+            self._extracted_from_test_print_report_special_characters_11(
+                mock_console_class, report_data, 4
+            )
 
     def test_print_report_large_data(self):
         """Test report printing with large data."""
@@ -386,18 +384,9 @@ class TestPrintReport:
         }
 
         with patch("milkbottle.modules.pdfmilker.report.Console") as mock_console_class:
-            mock_console = Mock()
-            mock_console_class.return_value = mock_console
-
-            with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
-
-                print_report(report_data)
-
-                # Verify table rows were added
-                assert mock_table.add_row.call_count == 7
-                mock_console.print.assert_called_once_with(mock_table)
+            self._extracted_from_test_print_report_special_characters_11(
+                mock_console_class, report_data, 7
+            )
 
     def test_print_report_special_characters(self):
         """Test report printing with special characters."""
@@ -409,18 +398,30 @@ class TestPrintReport:
         }
 
         with patch("milkbottle.modules.pdfmilker.report.Console") as mock_console_class:
-            mock_console = Mock()
-            mock_console_class.return_value = mock_console
+            self._extracted_from_test_print_report_special_characters_11(
+                mock_console_class, report_data, 4
+            )
 
-            with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
-                mock_table = Mock()
-                mock_table_class.return_value = mock_table
+    # TODO Rename this here and in `test_print_report_unicode_content`, `test_print_report_nested_objects`, `test_print_report_large_data` and `test_print_report_special_characters`
+    def _extracted_from_test_print_report_special_characters_11(
+        self, mock_console_class, report_data, arg2
+    ):
+        mock_console = Mock()
+        mock_console_class.return_value = mock_console
+        with patch("milkbottle.modules.pdfmilker.report.Table") as mock_table_class:
+            self._extracted_from_test_print_report_special_characters_15(
+                mock_table_class, report_data, arg2, mock_console
+            )
 
-                print_report(report_data)
-
-                # Verify table rows were added
-                assert mock_table.add_row.call_count == 4
-                mock_console.print.assert_called_once_with(mock_table)
+    # TODO Rename this here and in `test_print_report_unicode_content`, `test_print_report_nested_objects`, `test_print_report_large_data` and `test_print_report_special_characters`
+    def _extracted_from_test_print_report_special_characters_15(
+        self, mock_table_class, report_data, arg2, mock_console
+    ):
+        mock_table = Mock()
+        mock_table_class.return_value = mock_table
+        print_report(report_data)
+        assert mock_table.add_row.call_count == arg2
+        mock_console.print.assert_called_once_with(mock_table)
 
 
 class TestReportIntegration:

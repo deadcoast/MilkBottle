@@ -451,107 +451,57 @@ class TestIsDisplayMath:
 
     def test_is_display_math_begin_end(self):
         """Test detection of display math with begin/end."""
-        text = "\\begin{equation} x = y + z \\end{equation}"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is True
+        self._extracted_from_test_is_display_math_empty_3(
+            "\\begin{equation} x = y + z \\end{equation}", True, True
+        )
 
     def test_is_display_math_brackets(self):
         """Test detection of display math with brackets."""
-        text = "\\[ x = y + z \\]"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is True
+        self._extracted_from_test_is_display_math_empty_3(
+            "\\[ x = y + z \\]", True, True
+        )
 
     def test_is_display_math_displaystyle(self):
         """Test detection of display math with displaystyle."""
-        text = "\\displaystyle x = y + z"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is True
+        self._extracted_from_test_is_display_math_empty_3(
+            "\\displaystyle x = y + z", True, True
+        )
 
     def test_is_display_math_frac(self):
         """Test detection of display math with fraction."""
-        text = "\\frac{a + b}{c}"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is True
+        self._extracted_from_test_is_display_math_empty_3(
+            "\\frac{a + b}{c}", True, True
+        )
 
     def test_is_display_math_sum(self):
         """Test detection of display math with sum."""
-        text = "\\sum_{i=1}^{n} x_i"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is True
+        self._extracted_from_test_is_display_math_empty_3(
+            "\\sum_{i=1}^{n} x_i", True, True
+        )
 
     def test_is_display_math_inline(self):
         """Test detection of inline math (should not be display)."""
-        text = "x = y + z"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = True
-
-            result = _is_display_math(text)
-
-        assert result is False
+        self._extracted_from_test_is_display_math_empty_3("x = y + z", True, False)
 
     def test_is_display_math_not_math(self):
         """Test detection with non-mathematical content."""
-        text = "This is regular text"
-
-        with patch(
-            "milkbottle.modules.pdfmilker.transform.math_processor"
-        ) as mock_math:
-            mock_math.is_mathematical_content.return_value = False
-
-            result = _is_display_math(text)
-
-        assert result is False
+        self._extracted_from_test_is_display_math_empty_3(
+            "This is regular text", False, False
+        )
 
     def test_is_display_math_empty(self):
         """Test detection with empty text."""
-        text = ""
+        self._extracted_from_test_is_display_math_empty_3("", False, False)
 
+    # TODO Rename this here and in `test_is_display_math_begin_end`, `test_is_display_math_brackets`, `test_is_display_math_displaystyle`, `test_is_display_math_frac`, `test_is_display_math_sum`, `test_is_display_math_inline`, `test_is_display_math_not_math` and `test_is_display_math_empty`
+    def _extracted_from_test_is_display_math_empty_3(self, arg0, arg1, arg2):
+        text = arg0
         with patch(
             "milkbottle.modules.pdfmilker.transform.math_processor"
         ) as mock_math:
-            mock_math.is_mathematical_content.return_value = False
-
+            mock_math.is_mathematical_content.return_value = arg1
             result = _is_display_math(text)
-
-        assert result is False
+        assert result is arg2
 
 
 class TestTransformIntegration:

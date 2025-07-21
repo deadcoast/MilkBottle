@@ -127,6 +127,9 @@ class TestFullPipelineIntegration:
                 "relocated_path": str(relocated_path) if relocated_path else None,
                 "assets_valid": all(assets_valid.values()),
                 "hash_valid": hash_valid,
+                "markdown_content_length": (
+                    len(markdown_content) if markdown_content else 0
+                ),
                 "status": (
                     "success"
                     if relocated_path and all(assets_valid.values()) and hash_valid
@@ -154,34 +157,13 @@ class TestFullPipelineIntegration:
             assert result["report_data"]["pdf_hash"] is not None
             assert result["report_data"]["pages"] == 1
 
-        # Step 5: Generate summary report
-        summary_data = {
-            "total_pdfs": len(results),
-            "successful": len(
-                [r for r in results if r["report_data"]["status"] == "success"]
-            ),
-            "partial": len(
-                [r for r in results if r["report_data"]["status"] == "partial"]
-            ),
-            "total_pages": sum(r["report_data"]["pages"] for r in results),
-            "total_images": sum(r["report_data"]["images_extracted"] for r in results),
-            "total_tables": sum(r["report_data"]["tables_found"] for r in results),
-            "total_math_blocks": sum(r["report_data"]["math_blocks"] for r in results),
-        }
+        loaded_summary = self._extracted_from_test_pipeline_performance_138(
+            results, output_dir, 2, "total_pages"
+        )
 
-        # Ensure meta directory exists
-        meta_dir = output_dir / "meta"
-        meta_dir.mkdir(parents=True, exist_ok=True)
-
-        summary_report = write_report(summary_data, meta_dir, "summary.json")
-        assert summary_report.exists()
-
-        # Verify summary content
-        with summary_report.open("r", encoding="utf-8") as f:
-            loaded_summary = json.load(f)
-
-        assert loaded_summary["total_pdfs"] == 2
-        assert loaded_summary["total_pages"] == 2
+        # Verify summary was loaded successfully
+        assert loaded_summary is not None
+        assert "total_pdfs" in loaded_summary
 
     def test_pipeline_with_errors(self, tmp_path):
         """Test pipeline behavior when errors occur during processing."""
@@ -212,41 +194,9 @@ class TestFullPipelineIntegration:
 
         # Mock extraction to simulate success
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Valid Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Valid Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_path)
-
+            structured_content = self._extracted_from_test_pipeline_with_errors_30(
+                mock_fitz, pdf_path
+            )
         # Transform to Markdown
         markdown_content = pdf_to_markdown_structured(structured_content)
 
@@ -265,6 +215,7 @@ class TestFullPipelineIntegration:
             "tables_found": len(structured_content["tables"]),
             "math_blocks": len(structured_content["math_blocks"]),
             "relocated_path": str(relocated_path) if relocated_path else None,
+            "markdown_content_length": len(markdown_content) if markdown_content else 0,
             "status": "success" if relocated_path else "error",
         }
 
@@ -273,6 +224,43 @@ class TestFullPipelineIntegration:
 
         # Verify the invalid file was ignored
         assert invalid_file not in discovered_pdfs
+
+    # TODO Rename this here and in `test_pipeline_with_errors`
+    def _extracted_from_test_pipeline_with_errors_30(self, mock_fitz, pdf_path):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Valid Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Valid Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        return extract_text_structured(pdf_path)
 
     def test_pipeline_with_large_files(self, tmp_path):
         """Test pipeline behavior with large PDF files."""
@@ -303,45 +291,17 @@ class TestFullPipelineIntegration:
 
         # Mock extraction for large file
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            # Simulate large content
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Large Document Content",
-                                        "font": "Arial",
-                                        "size": 12,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Large Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_path)
-
+            structured_content = self._extracted_from_test_pipeline_with_large_files_30(
+                mock_fitz, pdf_path
+            )
         # Generate hash (should work with large files)
         pdf_hash = hash_pdf(pdf_path)
         assert pdf_hash is not None
+
+        # Verify structured content was extracted
+        assert structured_content is not None
+        assert "pages" in structured_content
+        assert len(structured_content["pages"]) >= 0
 
         # Relocate PDF (should handle large files)
         relocated_path = relocate_pdf(pdf_path, output_path["pdf"])
@@ -350,6 +310,44 @@ class TestFullPipelineIntegration:
         # Verify the relocated file has the same content
         assert relocated_path.exists()
         assert relocated_path.read_bytes() == large_content
+
+    # TODO Rename this here and in `test_pipeline_with_large_files`
+    def _extracted_from_test_pipeline_with_large_files_30(self, mock_fitz, pdf_path):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        # Simulate large content
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Large Document Content",
+                                    "font": "Arial",
+                                    "size": 12,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Large Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        return extract_text_structured(pdf_path)
 
     def test_pipeline_with_special_characters(self, tmp_path):
         """Test pipeline behavior with special characters in filenames."""
@@ -379,44 +377,11 @@ class TestFullPipelineIntegration:
 
         # Mock extraction
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Special Character Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {
-                "title": "Special Character Document",
-                "author": "Test Author",
-            }
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_path)
-
+            structured_content = (
+                self._extracted_from_test_pipeline_with_special_characters_29(
+                    mock_fitz, pdf_path
+                )
+            )
         # Transform to Markdown
         markdown_content = pdf_to_markdown_structured(structured_content)
 
@@ -439,11 +404,54 @@ class TestFullPipelineIntegration:
             "tables_found": len(structured_content["tables"]),
             "math_blocks": len(structured_content["math_blocks"]),
             "relocated_path": str(relocated_path),
+            "markdown_content_length": len(markdown_content) if markdown_content else 0,
             "status": "success",
         }
 
         report_path = write_report(report_data, output_path["meta"])
         assert report_path.exists()
+
+    # TODO Rename this here and in `test_pipeline_with_special_characters`
+    def _extracted_from_test_pipeline_with_special_characters_29(
+        self, mock_fitz, pdf_path
+    ):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Special Character Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {
+            "title": "Special Character Document",
+            "author": "Test Author",
+        }
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        return extract_text_structured(pdf_path)
 
     def test_pipeline_performance(self, tmp_path):
         """Test pipeline performance with multiple files."""
@@ -548,7 +556,15 @@ class TestFullPipelineIntegration:
             assert result["report_path"].exists()
             assert result["report_data"]["status"] == "success"
 
-        # Write summary report
+        loaded_summary = self._extracted_from_test_pipeline_performance_138(
+            results, output_dir, 10, "successful"
+        )
+        assert loaded_summary["total_pages"] == 10
+
+    # TODO Rename this here and in `test_complete_pipeline_workflow` and `test_pipeline_performance`
+    def _extracted_from_test_pipeline_performance_138(
+        self, results, output_dir, arg2, arg3
+    ):
         summary_data = {
             "total_pdfs": len(results),
             "successful": len(
@@ -562,21 +578,15 @@ class TestFullPipelineIntegration:
             "total_tables": sum(r["report_data"]["tables_found"] for r in results),
             "total_math_blocks": sum(r["report_data"]["math_blocks"] for r in results),
         }
-
-        # Ensure meta directory exists
         meta_dir = output_dir / "meta"
         meta_dir.mkdir(parents=True, exist_ok=True)
-
         summary_report = write_report(summary_data, meta_dir, "summary.json")
         assert summary_report.exists()
-
-        # Verify summary
         with summary_report.open("r", encoding="utf-8") as f:
-            loaded_summary = json.load(f)
-
-        assert loaded_summary["total_pdfs"] == 10
-        assert loaded_summary["successful"] == 10
-        assert loaded_summary["total_pages"] == 10
+            result = json.load(f)
+        assert result["total_pdfs"] == arg2
+        assert result[arg3] == arg2
+        return result
 
 
 class TestPipelineErrorHandling:
@@ -606,19 +616,27 @@ class TestPipelineErrorHandling:
 
         # Mock permission error during relocation
         with patch("milkbottle.modules.pdfmilker.relocate.shutil.move") as mock_move:
-            mock_move.side_effect = PermissionError("Permission denied")
+            self._extracted_from_test_pipeline_with_permission_errors_17(
+                mock_move, discovered_pdfs, output_dir
+            )
 
-            # Prepare output tree
-            output_tree = prepare_output_tree(discovered_pdfs[0], output_dir)
+    # TODO Rename this here and in `test_pipeline_with_permission_errors`
+    def _extracted_from_test_pipeline_with_permission_errors_17(
+        self, mock_move, discovered_pdfs, output_dir
+    ):
+        mock_move.side_effect = PermissionError("Permission denied")
 
-            # Try to relocate (should fail gracefully)
-            pdf_path = discovered_pdfs[0]
+        # Prepare output tree
+        output_tree = prepare_output_tree(discovered_pdfs[0], output_dir)
 
-            relocated_path = relocate_pdf(pdf_path, output_tree["pdf"])
-            assert relocated_path is None
+        # Try to relocate (should fail gracefully)
+        pdf_path = discovered_pdfs[0]
 
-            # Source file should still exist
-            assert pdf_path.exists()
+        relocated_path = relocate_pdf(pdf_path, output_tree["pdf"])
+        assert relocated_path is None
+
+        # Source file should still exist
+        assert pdf_path.exists()
 
     def test_pipeline_with_corrupted_pdfs(self, tmp_path):
         """Test pipeline behavior with corrupted PDF files."""
@@ -641,38 +659,46 @@ class TestPipelineErrorHandling:
         }
         # Mock extraction to simulate corruption error
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_fitz.side_effect = ValueError("Invalid PDF")
+            self._extracted_from_test_pipeline_with_corrupted_pdfs_22(
+                mock_fitz, discovered_pdfs, output_trees
+            )
 
-            pdf_path = discovered_pdfs[0]
-            output_path = output_trees[pdf_path]
+    # TODO Rename this here and in `test_pipeline_with_corrupted_pdfs`
+    def _extracted_from_test_pipeline_with_corrupted_pdfs_22(
+        self, mock_fitz, discovered_pdfs, output_trees
+    ):
+        mock_fitz.side_effect = ValueError("Invalid PDF")
 
-            # Extraction should return empty content
-            structured_content = extract_text_structured(pdf_path)
-            assert structured_content["raw_text"] == ""
-            assert structured_content["pages"] == []
+        pdf_path = discovered_pdfs[0]
+        output_path = output_trees[pdf_path]
 
-            # Hash should still work
-            pdf_hash = hash_pdf(pdf_path)
-            assert pdf_hash is not None
+        # Extraction should return empty content
+        structured_content = extract_text_structured(pdf_path)
+        assert structured_content["raw_text"] == ""
+        assert structured_content["pages"] == []
 
-            # Relocation should still work
-            relocated_path = relocate_pdf(pdf_path, output_path["pdf"])
-            assert relocated_path is not None
+        # Hash should still work
+        pdf_hash = hash_pdf(pdf_path)
+        assert pdf_hash is not None
 
-            # Write report with error status
-            report_data = {
-                "pdf_name": pdf_path.name,
-                "pdf_hash": pdf_hash,
-                "pages": len(structured_content["pages"]),
-                "images_extracted": len(structured_content["figures"]),
-                "tables_found": len(structured_content["tables"]),
-                "math_blocks": len(structured_content["math_blocks"]),
-                "relocated_path": str(relocated_path),
-                "status": "error_extraction",
-            }
+        # Relocation should still work
+        relocated_path = relocate_pdf(pdf_path, output_path["pdf"])
+        assert relocated_path is not None
 
-            report_path = write_report(report_data, output_path["meta"])
-            assert report_path.exists()
+        # Write report with error status
+        report_data = {
+            "pdf_name": pdf_path.name,
+            "pdf_hash": pdf_hash,
+            "pages": len(structured_content["pages"]),
+            "images_extracted": len(structured_content["figures"]),
+            "tables_found": len(structured_content["tables"]),
+            "math_blocks": len(structured_content["math_blocks"]),
+            "relocated_path": str(relocated_path),
+            "status": "error_extraction",
+        }
+
+        report_path = write_report(report_data, output_path["meta"])
+        assert report_path.exists()
 
 
 class TestPipelineLogging:
@@ -699,43 +725,14 @@ class TestPipelineLogging:
 
         # Mock extraction
         with patch("milkbottle.modules.pdfmilker.extract.fitz.open") as mock_fitz:
-            mock_doc = Mock()
-            mock_page = Mock()
-            mock_page.rect.width = 612
-            mock_page.rect.height = 792
-            mock_page.rotation = 0
-
-            mock_text_blocks = {
-                "blocks": [
-                    {
-                        "lines": [
-                            {
-                                "spans": [
-                                    {
-                                        "text": "Test Document",
-                                        "font": "Arial",
-                                        "size": 16,
-                                    }
-                                ]
-                            }
-                        ],
-                        "bbox": [10, 10, 100, 50],
-                    }
-                ]
-            }
-
-            mock_page.get_text.return_value = mock_text_blocks
-            mock_page.get_images.return_value = []
-            mock_page.find_tables.return_value = []
-            mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
-            mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
-            mock_doc.close = Mock()
-            mock_fitz.return_value = mock_doc
-
-            structured_content = extract_text_structured(pdf_path)
-
+            structured_content = self._extracted_from_test_pipeline_logging_output_22(
+                mock_fitz, pdf_path
+            )
         pdf_hash = hash_pdf(pdf_path)
         relocated_path = relocate_pdf(pdf_path, output_path["pdf"])
+
+        # Transform to Markdown for completeness
+        markdown_content = pdf_to_markdown_structured(structured_content)
 
         report_data = {
             "pdf_name": pdf_path.name,
@@ -745,10 +742,15 @@ class TestPipelineLogging:
             "tables_found": len(structured_content["tables"]),
             "math_blocks": len(structured_content["math_blocks"]),
             "relocated_path": str(relocated_path),
+            "markdown_content_length": len(markdown_content) if markdown_content else 0,
             "status": "success",
         }
 
         report_path = write_report(report_data, output_path["meta"])
+
+        # Verify report was created successfully
+        assert report_path.exists()
+        assert report_path.is_file()
 
         # Verify logging messages
         log_messages = [record.message for record in caplog.records]
@@ -758,3 +760,40 @@ class TestPipelineLogging:
         assert any("extracted" in msg.lower() for msg in log_messages)
         assert any("moved" in msg.lower() for msg in log_messages)
         assert any("wrote report" in msg.lower() for msg in log_messages)
+
+    # TODO Rename this here and in `test_pipeline_logging_output`
+    def _extracted_from_test_pipeline_logging_output_22(self, mock_fitz, pdf_path):
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_page.rect.width = 612
+        mock_page.rect.height = 792
+        mock_page.rotation = 0
+
+        mock_text_blocks = {
+            "blocks": [
+                {
+                    "lines": [
+                        {
+                            "spans": [
+                                {
+                                    "text": "Test Document",
+                                    "font": "Arial",
+                                    "size": 16,
+                                }
+                            ]
+                        }
+                    ],
+                    "bbox": [10, 10, 100, 50],
+                }
+            ]
+        }
+
+        mock_page.get_text.return_value = mock_text_blocks
+        mock_page.get_images.return_value = []
+        mock_page.find_tables.return_value = []
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.metadata = {"title": "Test Document", "author": "Test Author"}
+        mock_doc.close = Mock()
+        mock_fitz.return_value = mock_doc
+
+        return extract_text_structured(pdf_path)

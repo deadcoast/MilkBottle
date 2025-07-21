@@ -125,6 +125,9 @@ class PerformanceProfiler:
                     if memory_start and memory_end
                     else None
                 ),
+                details={
+                    "return_value": str(result)[:100] if result is not None else "None"
+                },
             )
 
             # Add CPU profiling details
@@ -244,8 +247,12 @@ class PerformanceProfiler:
     def _extracted_from_stop_profile_5(self, stats, profile_result):
         stats.sort_stats("cumulative")
         output = StringIO()
-        stats.print_stats(10)
-        profile_result.details["cpu_profile"] = "CPU profiling completed"
+        stats.print_stats(10, file=output)
+        profile_result.details["cpu_profile"] = (
+            f"{output.getvalue()[:200]}..."
+            if len(output.getvalue()) > 200
+            else output.getvalue()
+        )
 
     def get_profile_history(self) -> List[ProfileResult]:
         """Get profiling history.

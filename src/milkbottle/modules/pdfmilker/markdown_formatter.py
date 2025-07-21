@@ -219,8 +219,8 @@ class MarkdownFormatter:
                 # Add raw line without any processing
                 algorithm_lines.append(line)
             elif re.match(r"^\d+\.\s+[A-Z]", line) or re.match(
-                    r"^[A-Z][A-Z\s]{3,}$", line
-                ):
+                r"^[A-Z][A-Z\s]{3,}$", line
+            ):
                 break
             else:
                 # If it doesn't look like algorithm content but we're still in the algorithm, include it as raw text
@@ -273,8 +273,7 @@ class MarkdownFormatter:
         ]
 
         return any(
-            re.match(pattern, line, re.IGNORECASE)
-            for pattern in algorithm_patterns
+            re.match(pattern, line, re.IGNORECASE) for pattern in algorithm_patterns
         )
 
     def _is_algorithm_continuation(self, line: str) -> bool:
@@ -345,9 +344,7 @@ class MarkdownFormatter:
 
     def _is_heading(self, line: str) -> bool:
         """Check if line is a heading."""
-        return any(
-            pattern.match(line) for pattern in self.compiled_patterns["heading"]
-        )
+        return any(pattern.match(line) for pattern in self.compiled_patterns["heading"])
 
     def _format_heading(self, line: str) -> str:
         """Format a heading."""
@@ -473,11 +470,7 @@ class MarkdownFormatter:
                 math_expr = match.group()
 
                 if start > 0:
-                    if (
-                        text[start - 1] == "$"
-                        and end < len(text)
-                        and text[end] == "$"
-                    ):
+                    if text[start - 1] == "$" and end < len(text) and text[end] == "$":
                         continue
 
                     # Check if it's part of a larger math block
@@ -576,21 +569,16 @@ class MarkdownFormatter:
 
         # Add math blocks
         math_blocks = structured_content.get("math_blocks", [])
-        for math_block in math_blocks:
-            formatted_sections.append(
-                math_processor.process_mathematical_content(math_block["text"])
-            )
-
+        formatted_sections.extend(
+            math_processor.process_mathematical_content(math_block["text"])
+            for math_block in math_blocks
+        )
         # Add figures
         figures = structured_content.get("figures", [])
-        for figure in figures:
-            formatted_sections.append(f"\n**{figure['caption']}**")
-
+        formatted_sections.extend(f"\n**{figure['caption']}**" for figure in figures)
         if references := structured_content.get("references", []):
             formatted_sections.append("\n## References")
-            for ref in references:
-                formatted_sections.append(ref["text"])
-
+            formatted_sections.extend(ref["text"] for ref in references)
         return self._cleanup_spacing("\n\n".join(formatted_sections))
 
     def _table_to_markdown(self, table: Dict[str, Any]) -> List[str]:

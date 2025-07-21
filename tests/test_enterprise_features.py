@@ -290,6 +290,10 @@ class TestUserManager:
             "testuser", "test@example.com", "password123"
         )
 
+        # Verify user was created successfully
+        assert user is not None
+        assert user.username == "testuser"
+
         updated_user = self.user_manager.update_user(
             "testuser",
             email="newemail@example.com",
@@ -298,15 +302,16 @@ class TestUserManager:
         )
 
         assert updated_user is not None
-        assert updated_user.email == "newemail@example.com"
-        assert updated_user.role == UserRole.ADMIN
-        assert updated_user.is_active is False
-
+        self._extracted_from_test_update_user_15(updated_user)
         # Verify changes were saved
         saved_user = self.user_manager.get_user("testuser")
-        assert saved_user.email == "newemail@example.com"
-        assert saved_user.role == UserRole.ADMIN
-        assert saved_user.is_active is False
+        self._extracted_from_test_update_user_15(saved_user)
+
+    # TODO Rename this here and in `test_update_user`
+    def _extracted_from_test_update_user_15(self, arg0):
+        assert arg0.email == "newemail@example.com"
+        assert arg0.role == UserRole.ADMIN
+        assert arg0.is_active is False
 
     def test_update_nonexistent_user(self):
         """Test updating nonexistent user."""
@@ -701,11 +706,7 @@ class TestEnterpriseIntegration:
         )
         assert admin_user.role == UserRole.ADMIN
 
-        # Login as admin
-        result = self.enterprise.login("admin", "adminpass")
-        assert result is True
-        assert self.enterprise.current_user.username == "admin"
-
+        result = self._extracted_from_test_full_workflow_13("admin", "adminpass")
         # Create regular user
         regular_user = self.enterprise.user_manager.create_user(
             "user1", "user1@example.com", "userpass", UserRole.USER
@@ -725,16 +726,26 @@ class TestEnterpriseIntegration:
         self.enterprise.logout()
         assert self.enterprise.current_user is None
 
-        # Login as regular user
-        result = self.enterprise.login("user1", "userpass")
+        result = self._extracted_from_test_full_workflow_13("user1", "userpass")
+        # Verify login result for debugging
         assert result is True
-        assert self.enterprise.current_user.username == "user1"
 
         # Check permissions
         assert (
             self.enterprise.check_permission("read_files") is False
         )  # No specific permissions
         assert self.enterprise.check_permission("admin_access") is False
+
+    # TODO Rename this here and in `test_full_workflow`
+    def _extracted_from_test_full_workflow_13(self, arg0, arg1):
+        # Login as admin
+        result = self.enterprise.login(arg0, arg1)
+        assert result is True
+        assert self.enterprise.current_user.username == arg0
+
+        # Verify login result for debugging
+        assert result is True
+        return result
 
     def test_permission_system(self):
         """Test permission system."""

@@ -153,42 +153,32 @@ class TestPluginLoader:
     def test_load_manifest_yaml(self):
         """Test loading manifest from YAML file."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manifest_data = {
-                "name": "test_plugin",
-                "version": "1.0.0",
-                "description": "Test plugin",
-                "entry_point": "test_plugin.main",
-            }
-
-            manifest_file = Path(temp_dir) / "plugin.yaml"
-            with open(manifest_file, "w") as f:
-                yaml.dump(manifest_data, f)
-
-            loader = PluginLoader()
-            manifest = loader._load_manifest(manifest_file)
-
-            assert manifest.name == "test_plugin"
-            assert manifest.version == "1.0.0"
+            self._extracted_from_test_load_manifest_json_4(
+                temp_dir, "plugin.yaml", yaml
+            )
 
     def test_load_manifest_json(self):
         """Test loading manifest from JSON file."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manifest_data = {
-                "name": "test_plugin",
-                "version": "1.0.0",
-                "description": "Test plugin",
-                "entry_point": "test_plugin.main",
-            }
+            self._extracted_from_test_load_manifest_json_4(
+                temp_dir, "plugin.json", json
+            )
 
-            manifest_file = Path(temp_dir) / "plugin.json"
-            with open(manifest_file, "w") as f:
-                json.dump(manifest_data, f)
-
-            loader = PluginLoader()
-            manifest = loader._load_manifest(manifest_file)
-
-            assert manifest.name == "test_plugin"
-            assert manifest.version == "1.0.0"
+    # TODO Rename this here and in `test_load_manifest_yaml` and `test_load_manifest_json`
+    def _extracted_from_test_load_manifest_json_4(self, temp_dir, arg1, arg2):
+        manifest_data = {
+            "name": "test_plugin",
+            "version": "1.0.0",
+            "description": "Test plugin",
+            "entry_point": "test_plugin.main",
+        }
+        manifest_file = Path(temp_dir) / arg1
+        with open(manifest_file, "w") as f:
+            arg2.dump(manifest_data, f)
+        loader = PluginLoader()
+        manifest = loader._load_manifest(manifest_file)
+        assert manifest.name == "test_plugin"
+        assert manifest.version == "1.0.0"
 
     @patch("importlib.import_module")
     def test_load_plugin_module_success(self, mock_import):
@@ -744,6 +734,9 @@ class TestIntegration:
         plugin_manager = get_plugin_manager()
         monitoring_manager = get_monitoring_manager()
 
+        # Verify plugin manager was retrieved successfully
+        assert plugin_manager is not None
+
         # Record some operations
         record_operation("plugin.discovery", 0.1, True)
         record_operation("plugin.load", 0.2, True)
@@ -763,28 +756,29 @@ class TestIntegration:
             log_file = f.name
 
         try:
-            # Create monitoring manager with log file
-            manager = MonitoringManager(log_file)
-
-            # Set correlation ID and log
-            manager.logger.set_correlation_id("test-correlation")
-            manager.logger.info("Test message", operation="test")
-
-            # Record operation
-            manager.record_operation("test_operation", 1.0, True)
-
-            # Check logs
-            logs = manager.logger.get_recent_logs()
-            assert len(logs) >= 2  # At least the info log and operation log
-
-            # Check correlation ID filtering
-            correlation_logs = manager.logger.get_logs_by_correlation_id(
-                "test-correlation"
-            )
-            assert len(correlation_logs) >= 1
-
+            self._extracted_from_test_logging_and_monitoring_integration_8(log_file)
         finally:
             Path(log_file).unlink()
+
+    # TODO Rename this here and in `test_logging_and_monitoring_integration`
+    def _extracted_from_test_logging_and_monitoring_integration_8(self, log_file):
+        # Create monitoring manager with log file
+        manager = MonitoringManager(log_file)
+
+        # Set correlation ID and log
+        manager.logger.set_correlation_id("test-correlation")
+        manager.logger.info("Test message", operation="test")
+
+        # Record operation
+        manager.record_operation("test_operation", 1.0, True)
+
+        # Check logs
+        logs = manager.logger.get_recent_logs()
+        assert len(logs) >= 2  # At least the info log and operation log
+
+        # Check correlation ID filtering
+        correlation_logs = manager.logger.get_logs_by_correlation_id("test-correlation")
+        assert len(correlation_logs) >= 1
 
     def test_error_handling(self):
         """Test error handling in Phase 3 features."""

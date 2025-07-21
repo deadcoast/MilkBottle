@@ -14,12 +14,11 @@ class TestConfigurationIntegration:
     def test_pipeline_respects_grobid_configuration(self):
         """Test that pipeline respects Grobid configuration."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a mock config that disables Grobid
-            mock_config = Mock(spec=PDFmilkerConfig)
-            mock_config.is_grobid_enabled.return_value = False
-            mock_config.is_pandoc_enabled.return_value = True
-            mock_config.is_mathpix_enabled.return_value = True
-
+            mock_config = (
+                self._extracted_from_test_pipeline_respects_mathpix_configuration_5(
+                    False, True, True
+                )
+            )
             # Patch the config in the pipeline
             with patch(
                 "milkbottle.modules.pdfmilker.pipeline.pdfmilker_config", mock_config
@@ -58,12 +57,11 @@ class TestConfigurationIntegration:
     def test_pipeline_respects_pandoc_configuration(self):
         """Test that pipeline respects Pandoc configuration."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a mock config that disables Pandoc
-            mock_config = Mock(spec=PDFmilkerConfig)
-            mock_config.is_grobid_enabled.return_value = False
-            mock_config.is_pandoc_enabled.return_value = False
-            mock_config.is_mathpix_enabled.return_value = True
-
+            mock_config = (
+                self._extracted_from_test_pipeline_respects_mathpix_configuration_5(
+                    False, False, True
+                )
+            )
             # Patch the config in the pipeline
             with patch(
                 "milkbottle.modules.pdfmilker.pipeline.pdfmilker_config", mock_config
@@ -76,39 +74,46 @@ class TestConfigurationIntegration:
 
                 # Mock the fallback extraction to avoid PDF file issues
                 with patch.object(pipeline, "_fallback_extraction") as mock_fallback:
-                    mock_fallback.return_value = {
-                        "success": True,
-                        "method": "enhanced_fallback",
-                        "output_path": Path(temp_dir) / "output.md",
-                        "content_length": 100,
-                        "math_expressions_count": 0,
-                        "tables_count": 0,
-                    }
+                    self._extracted_from_test_pipeline_respects_pandoc_configuration_21(
+                        temp_dir, mock_fallback, pipeline
+                    )
 
-                    # Create a test PDF file
-                    pdf_path = Path(temp_dir) / "test.pdf"
-                    pdf_path.write_text("dummy pdf content")
-                    output_path = Path(temp_dir) / "output.md"
+    # TODO Rename this here and in `test_pipeline_respects_pandoc_configuration`
+    def _extracted_from_test_pipeline_respects_pandoc_configuration_21(
+        self, temp_dir, mock_fallback, pipeline
+    ):
+        mock_fallback.return_value = {
+            "success": True,
+            "method": "enhanced_fallback",
+            "output_path": Path(temp_dir) / "output.md",
+            "content_length": 100,
+            "math_expressions_count": 0,
+            "tables_count": 0,
+        }
 
-                    # Process the PDF
-                    result = pipeline.process_scientific_paper(pdf_path, output_path)
+        # Create a test PDF file
+        pdf_path = Path(temp_dir) / "test.pdf"
+        pdf_path.write_text("dummy pdf content")
+        output_path = Path(temp_dir) / "output.md"
 
-                    # Verify Pandoc was not called
-                    pipeline.pandoc_converter.convert_pdf_to_markdown.assert_not_called()
+        # Process the PDF
+        result = pipeline.process_scientific_paper(pdf_path, output_path)
 
-                    # Verify fallback was used
-                    assert result["success"] is True
-                    assert result["method"] == "enhanced_fallback"
+        # Verify Pandoc was not called
+        pipeline.pandoc_converter.convert_pdf_to_markdown.assert_not_called()
+
+        # Verify fallback was used
+        assert result["success"] is True
+        assert result["method"] == "enhanced_fallback"
 
     def test_pipeline_respects_mathpix_configuration(self):
         """Test that pipeline respects Mathpix configuration."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a mock config that disables Mathpix
-            mock_config = Mock(spec=PDFmilkerConfig)
-            mock_config.is_grobid_enabled.return_value = True
-            mock_config.is_pandoc_enabled.return_value = True
-            mock_config.is_mathpix_enabled.return_value = False
-
+            mock_config = (
+                self._extracted_from_test_pipeline_respects_mathpix_configuration_5(
+                    True, True, False
+                )
+            )
             # Patch the config in the pipeline
             with patch(
                 "milkbottle.modules.pdfmilker.pipeline.pdfmilker_config", mock_config
@@ -145,6 +150,16 @@ class TestConfigurationIntegration:
                 assert result["success"] is True
                 assert result["method"] == "grobid"
 
+    # TODO Rename this here and in `test_pipeline_respects_grobid_configuration`, `test_pipeline_respects_pandoc_configuration` and `test_pipeline_respects_mathpix_configuration`
+    def _extracted_from_test_pipeline_respects_mathpix_configuration_5(
+        self, arg0, arg1, arg2
+    ):
+        result = Mock(spec=PDFmilkerConfig)
+        result.is_grobid_enabled.return_value = arg0
+        result.is_pandoc_enabled.return_value = arg1
+        result.is_mathpix_enabled.return_value = arg2
+        return result
+
     def test_math_extraction_respects_configuration(self):
         """Test that math extraction respects configuration."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -157,25 +172,31 @@ class TestConfigurationIntegration:
             with patch(
                 "milkbottle.modules.pdfmilker.pipeline.pdfmilker_config", mock_config
             ):
-                pipeline = PDFmilkerPipeline()
+                self._extracted_from_test_math_extraction_respects_configuration_13(
+                    temp_dir
+                )
 
-                # Mock the extractors
-                pipeline.mathpix_processor = Mock()
-                pipeline.grobid_extractor = Mock()
+    # TODO Rename this here and in `test_math_extraction_respects_configuration`
+    def _extracted_from_test_math_extraction_respects_configuration_13(self, temp_dir):
+        pipeline = PDFmilkerPipeline()
 
-                # Create a test PDF file
-                pdf_path = Path(temp_dir) / "test.pdf"
-                pdf_path.write_text("dummy pdf content")
+        # Mock the extractors
+        pipeline.mathpix_processor = Mock()
+        pipeline.grobid_extractor = Mock()
 
-                # Extract math
-                result = pipeline.extract_math_only(pdf_path)
+        # Create a test PDF file
+        pdf_path = Path(temp_dir) / "test.pdf"
+        pdf_path.write_text("dummy pdf content")
 
-                # Verify neither service was called
-                pipeline.mathpix_processor.extract_math_from_pdf.assert_not_called()
-                pipeline.grobid_extractor.extract_scientific_paper.assert_not_called()
+        # Extract math
+        result = pipeline.extract_math_only(pdf_path)
 
-                # Verify empty result
-                assert result == []
+        # Verify neither service was called
+        pipeline.mathpix_processor.extract_math_from_pdf.assert_not_called()
+        pipeline.grobid_extractor.extract_scientific_paper.assert_not_called()
+
+        # Verify empty result
+        assert result == []
 
     def test_configuration_validation(self):
         """Test configuration validation."""

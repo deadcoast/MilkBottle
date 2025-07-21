@@ -9,6 +9,7 @@ Enhanced with standardized interface for MilkBottle integration.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
@@ -194,27 +195,19 @@ def _check_dependencies() -> Dict[str, Any]:
     try:
         missing_deps = []
         # Check virtualenv
-        try:
-            import virtualenv
-        except ImportError:
+        if not importlib.util.find_spec("virtualenv"):
             missing_deps.append("virtualenv")
 
         # Check Rich
-        try:
-            import rich
-        except ImportError:
+        if not importlib.util.find_spec("rich"):
             missing_deps.append("Rich")
 
         # Check Typer
-        try:
-            import typer
-        except ImportError:
+        if not importlib.util.find_spec("typer"):
             missing_deps.append("Typer")
 
         # Check python-slugify
-        try:
-            import slugify
-        except ImportError:
+        if not importlib.util.find_spec("slugify"):
             missing_deps.append("python-slugify")
 
         if missing_deps:
@@ -279,36 +272,21 @@ def _check_functionality() -> Dict[str, Any]:
         functionality_checks = []
 
         # Check if CLI can be loaded
-        try:
+        with contextlib.suppress(Exception):
             cli = get_cli()
             if cli is not None:
                 functionality_checks.append("CLI loading")
-        except Exception:
-            pass
-
         # Check if workflow module is available
-        try:
-            from .workflow import activate_environment, bootstrap_environment
-
+        if importlib.util.find_spec("milkbottle.modules.venvmilker.workflow"):
             functionality_checks.append("workflow_functions")
-        except ImportError:
-            pass
 
         # Check if utils module is available
-        try:
-            from .utils import find_interpreter
-
+        if importlib.util.find_spec("milkbottle.modules.venvmilker.utils"):
             functionality_checks.append("utility_functions")
-        except ImportError:
-            pass
 
         # Check if template module is available
-        try:
-            from .template import apply_template
-
+        if importlib.util.find_spec("milkbottle.modules.venvmilker.template"):
             functionality_checks.append("template_system")
-        except ImportError:
-            pass
 
         if len(functionality_checks) >= 3:
             return {

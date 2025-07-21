@@ -54,20 +54,18 @@ class TestPhase2Integration:
         # Perform health check for all bottles
         health_result = registry_instance.health_check()
 
-        # Check structure
-        assert "timestamp" in health_result
-        assert "overall_status" in health_result
-        assert "bottles" in health_result
-
+        self._extracted_from_test_health_check_integration_19(
+            "timestamp", health_result, "overall_status", "bottles"
+        )
         # Check that overall status is valid
         assert health_result["overall_status"] in ["healthy", "warning", "critical"]
 
         # Check that bottles have health information
         if health_result["bottles"]:
             for bottle_name, health_info in health_result["bottles"].items():
-                assert "status" in health_info
-                assert "details" in health_info
-                assert "timestamp" in health_info
+                self._extracted_from_test_health_check_integration_19(
+                    "status", health_info, "details", "timestamp"
+                )
                 assert "version" in health_info
 
                 # Check that status is valid
@@ -78,6 +76,12 @@ class TestPhase2Integration:
                     for check_name, check_info in health_info["checks"].items():
                         assert "status" in check_info
                         assert "details" in check_info
+
+    # TODO Rename this here and in `test_health_check_integration`
+    def _extracted_from_test_health_check_integration_19(self, arg0, arg1, arg2, arg3):
+        assert arg0 in arg1
+        assert arg2 in arg1
+        assert arg3 in arg1
 
     def test_configuration_validation_integration(self):
         """Test configuration validation integration."""
